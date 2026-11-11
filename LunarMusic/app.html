@@ -224,6 +224,32 @@ body.playing .btn.play .ipause{display:block}
 .volume{margin-top:16px;display:flex;align-items:center;gap:10px;width:200px;color:var(--ink-soft)}
 .volume svg{width:17px;height:17px;fill:currentColor;flex:none;cursor:pointer}
 
+/* ---------- lyrics ---------- */
+.lyrbtn{position:absolute;top:16px;right:16px;z-index:2;height:32px;padding:0 14px 0 11px;border-radius:16px;border:1px solid var(--line);cursor:pointer;
+  display:flex;align-items:center;gap:7px;color:var(--ink-soft);font:inherit;font-size:12.5px;letter-spacing:.08em;
+  background:linear-gradient(170deg,rgba(var(--accent-rgb),.2),rgba(var(--accent-rgb),.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.lyrbtn[hidden]{display:none}
+.lyrbtn svg{width:15px;height:15px;fill:currentColor}
+.lyrbtn:hover{color:var(--ink)}
+.lyrbtn.active{color:#fff;border-color:var(--line-bright);background:linear-gradient(170deg,rgba(var(--accent-rgb),.42),rgba(var(--accent-rgb),.16));box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 18px rgba(var(--accent-rgb),.45)}
+.lyrbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lyrics{--lh:min(380px,46vh);width:min(600px,100%);height:var(--lh);flex:none;overflow-y:auto;position:relative;text-align:center;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent);mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent)}
+.lyrics[hidden]{display:none}
+.lyrics::-webkit-scrollbar{display:none}
+.lyrin{padding:calc(var(--lh) / 2 - 22px) 10px}
+.ll{font-size:19px;line-height:1.35;font-weight:500;color:var(--ink-faint);padding:7px 0;cursor:pointer;
+  transition:color .25s,transform .25s,text-shadow .25s}
+.ll:hover{color:var(--ink-soft)}
+.ll.cur{color:var(--ink);font-weight:650;transform:scale(1.09);text-shadow:0 0 24px rgba(var(--accent-rgb),.6)}
+.lyrics.plain .lyrin{padding:calc(var(--lh) * .16) 10px}
+.lyrics.plain .ll{font-size:16.5px;font-weight:400;color:var(--ink-soft);padding:3px 0;cursor:default}
+.lyrics.plain .ll.gap{height:16px}
+body.lyrics-on .stage{display:none}
+body.native .lyrics{--lh:min(72vw,30vh)}
+body.native .ll{font-size:17px}
+body.native .lyrbtn{top:12px;right:12px}
+
 /* ---------- iPhone app ---------- */
 .ios-only{display:none}
 body.native .ios-only{display:block}
@@ -337,6 +363,10 @@ input[type=color]::-webkit-color-swatch{border:0}
     </section>
 
     <section class="glass now">
+      <button class="lyrbtn" id="lyrBtn" hidden title="Show or hide lyrics (L)" aria-label="Show or hide lyrics">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg><span>LYRICS</span>
+      </button>
+      <div class="lyrics" id="lyrics" hidden><div class="lyrin" id="lyrIn"></div></div>
       <div class="stage">
         <canvas id="viz"></canvas>
         <div class="disc"><img id="art" alt="" hidden></div>
@@ -418,12 +448,14 @@ input[type=color]::-webkit-color-swatch{border:0}
     <div class="hint ios-only" id="iconHintIos">PNG or JPEG. Changes the logo inside the app. The Home Screen icon is fixed.</div>
 
     <h3>Music folders</h3>
-    <div class="ios-only hint" style="font-size:13.5px;color:var(--ink-soft)">Open the Files app and go to On My iPhone, then Lunar Music. Put your .mp3 files in SONGS and your .png icons (same name as the song) in ICONS, then tap the refresh button next to the search box.</div>
+    <div class="ios-only hint" style="font-size:13.5px;color:var(--ink-soft)">Open the Files app and go to On My iPhone, then Lunar Music. Put your .mp3 files in SONGS, your .png icons in ICONS and any .lrc lyrics in LYRICS (icons and lyrics use the same name as the song), then tap the refresh button next to the search box.</div>
     <div class="desk-only">
     <label class="pathlabel" for="pSongs">Songs (.mp3)</label>
     <div class="pathrow"><input class="path" id="pSongs" spellcheck="false" autocomplete="off"><button class="pill" data-browse="pSongs">Browse</button></div>
     <label class="pathlabel" for="pIcons">Icons (.png, same name as the song)</label>
     <div class="pathrow"><input class="path" id="pIcons" spellcheck="false" autocomplete="off"><button class="pill" data-browse="pIcons">Browse</button></div>
+    <label class="pathlabel" for="pLyrics">Lyrics (.lrc or .txt, same name as the song)</label>
+    <div class="pathrow"><input class="path" id="pLyrics" spellcheck="false" autocomplete="off"><button class="pill" data-browse="pLyrics">Browse</button></div>
     <div class="pathrow" style="margin-top:12px"><button class="pill" id="applyFolders">Use these folders</button></div>
     <div class="hint" id="folderHint"></div>
     </div>
@@ -478,6 +510,7 @@ function iconUrl(s){ return s.icon ? '/icon?f=' + encodeURIComponent(s.icon) : '
 function fetchLibrary(keep){
   return fetch('/api/library').then(function(r){ return r.json(); }).then(function(lib){
     var playingFile = cur >= 0 ? songs[cur].file : null;
+    lyrCache = {};
     songs = lib.songs || [];
     songs.forEach(function(s){ var d = describe(s); s.title = d.title; s.artist = d.artist; });
     render(lib);
@@ -568,6 +601,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
+  showLyricsFor(i);
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -612,6 +646,7 @@ audio.addEventListener('timeupdate', function(){
   if(seeking || !audio.duration) return;
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
   $('cur').textContent = fmt(audio.currentTime);
+  syncLyrics(false);
 });
 
 $('seek').addEventListener('input', function(){
@@ -620,7 +655,7 @@ $('seek').addEventListener('input', function(){
 });
 $('seek').addEventListener('change', function(){
   if(audio.duration) audio.currentTime = this.value / 1000 * audio.duration;
-  seeking = false;
+  seeking = false; lyrHold = 0; syncLyrics(false);
 });
 
 function setVol(v){
@@ -666,6 +701,7 @@ document.addEventListener('keydown', function(e){
   else if(k === 'p' || k === 'P') prev();
   else if(k === 's' || k === 'S') setShuffle(!shuffle);
   else if(k === 'r' || k === 'R') cycleRepeat();
+  else if(k === 'l' || k === 'L'){ if(lyr) toggleLyrics(); }
   else if(k === '/'){ e.preventDefault(); $('q').focus(); }
 });
 
@@ -745,6 +781,176 @@ function frame(t){
   requestAnimationFrame(frame);
 }
 
+
+
+/* ---------- lyrics ----------
+   A song has lyrics when there is a "<song name>.lrc" (or .txt) file for it, or when the MP3 itself
+   carries them in its tag. Timed lyrics scroll with the music; plain ones are just shown. */
+var lyrCache = {}, lyr = null, lyrOn = !!load('lyrics', true), lyrToken = 0, lyrIdx = -1, lyrHold = 0, lyrEls = [];
+
+function parseLRC(text){
+  text = String(text).replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+  var raw = text.split('\n'), timed = [], offset = 0, stamp = /^\s*\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?\]/;
+  raw.forEach(function(line){
+    var m, times = [], rest = line;
+    while((m = stamp.exec(rest))){
+      times.push(parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseInt(m[3], 10) / Math.pow(10, m[3].length) : 0));
+      rest = rest.slice(m[0].length);
+    }
+    if(times.length){
+      rest = rest.replace(/<\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?>/g, '').trim();
+      times.forEach(function(t){ timed.push({ t: t, text: rest }); });
+    } else {
+      var o = /^\s*\[offset:\s*([+-]?\d+)\s*\]/i.exec(line);
+      if(o) offset = parseInt(o[1], 10) / 1000;
+    }
+  });
+  if(timed.length >= 2){
+    timed.forEach(function(l){ l.t = Math.max(0, l.t - offset); });
+    timed.sort(function(a, b){ return a.t - b.t; });
+    return { synced: true, lines: timed };
+  }
+  var plain = raw.filter(function(l){ return !/^\s*\[[a-z#]+:.*\]\s*$/i.test(l); }).map(function(l){ return { t: null, text: l.trim() }; });
+  while(plain.length && !plain[0].text) plain.shift();
+  while(plain.length && !plain[plain.length - 1].text) plain.pop();
+  return plain.length ? { synced: false, lines: plain } : null;
+}
+
+/* Reads lyrics out of an MP3's ID3v2 tag: USLT (plain) and SYLT (timed) frames. */
+function parseID3(buf){
+  var b = new Uint8Array(buf);
+  if(b.length < 10 || b[0] !== 0x49 || b[1] !== 0x44 || b[2] !== 0x33) return null;
+  function ss(a, p){ return ((a[p] & 0x7f) << 21) | ((a[p + 1] & 0x7f) << 14) | ((a[p + 2] & 0x7f) << 7) | (a[p + 3] & 0x7f); }
+  function be32(a, p){ return ((a[p] << 24) >>> 0) + (a[p + 1] << 16) + (a[p + 2] << 8) + a[p + 3]; }
+  function unsync(a){ var o = new Uint8Array(a.length), n = 0; for(var i = 0; i < a.length; i++){ o[n++] = a[i]; if(a[i] === 0xFF && a[i + 1] === 0) i++; } return o.subarray(0, n); }
+  function dec(bytes, enc){
+    var label = enc === 0 ? 'windows-1252' : enc === 2 ? 'utf-16be' : enc === 3 ? 'utf-8' : 'utf-16le';
+    if(enc === 1 && bytes.length >= 2){
+      if(bytes[0] === 0xFE && bytes[1] === 0xFF){ label = 'utf-16be'; bytes = bytes.subarray(2); }
+      else if(bytes[0] === 0xFF && bytes[1] === 0xFE){ bytes = bytes.subarray(2); }
+    }
+    try{ return new TextDecoder(label).decode(bytes).replace(/\u0000+$/, ''); }catch(e){ return ''; }
+  }
+  function wide(enc){ return enc === 1 || enc === 2; }
+  function term(a, start, enc){
+    if(wide(enc)){ for(var i = start; i + 1 < a.length; i += 2) if(a[i] === 0 && a[i + 1] === 0) return i; return a.length; }
+    var j = a.indexOf(0, start); return j < 0 ? a.length : j;
+  }
+  function readUSLT(a){
+    if(a.length < 5) return '';
+    var enc = a[0], e = term(a, 4, enc);
+    return dec(a.subarray(Math.min(a.length, e + (wide(enc) ? 2 : 1))), enc);
+  }
+  function readSYLT(a){
+    if(a.length < 7) return null;
+    var enc = a[0], format = a[4], tw = wide(enc) ? 2 : 1, p = term(a, 6, enc) + tw, items = [];
+    while(p < a.length){
+      var e = term(a, p, enc);
+      if(e + tw + 4 > a.length) break;
+      items.push({ t: be32(a, e + tw) / 1000, text: dec(a.subarray(p, e), enc) });
+      p = e + tw + 4;
+    }
+    if(!items.length) return null;
+    // Some files time every word and mark new lines with a line break; join those back into lines.
+    var wordLevel = items.some(function(it, i){ return i > 0 && /^\n/.test(it.text); }) && items.some(function(it, i){ return i > 0 && !/^\n/.test(it.text); });
+    var lines = [];
+    items.forEach(function(it, i){
+      var txt = it.text.replace(/\r/g, '');
+      if(!wordLevel || i === 0 || /^\n/.test(txt)) lines.push({ t: it.t, text: txt.replace(/\n/g, ' ') });
+      else lines[lines.length - 1].text += txt.replace(/\n/g, ' ');
+    });
+    lines.forEach(function(l){ l.text = l.text.replace(/\s+/g, ' ').trim(); });
+    return { timed: format === 2, lines: lines };
+  }
+
+  var ver = b[3], flags = b[5], end = Math.min(b.length, 10 + ss(b, 6)), data = b.subarray(0, end), pos = 10;
+  if(ver < 2 || ver > 4) return null;
+  if((flags & 0x80) && ver <= 3){ data = unsync(b.subarray(10, end)); pos = 0; end = data.length; }
+  if((flags & 0x40) && ver === 3) pos += 4 + be32(data, pos);
+  else if((flags & 0x40) && ver === 4) pos += ss(data, pos);
+  var hdr = ver === 2 ? 6 : 10, plain = '', synced = null;
+  function frameAt(p){ if(p === end) return true; if(p + hdr > end) return false; if(data[p] === 0) return true;
+    for(var i = 0; i < (ver === 2 ? 3 : 4); i++){ var c = data[p + i]; if(!((c >= 65 && c <= 90) || (c >= 48 && c <= 57))) return false; } return true; }
+  while(pos + hdr <= end && data[pos] !== 0){
+    var id = String.fromCharCode.apply(null, data.subarray(pos, pos + (ver === 2 ? 3 : 4))), len, ff = 0;
+    if(!/^[A-Z0-9]+$/.test(id)) break;
+    if(ver === 2) len = (data[pos + 3] << 16) | (data[pos + 4] << 8) | data[pos + 5];
+    else {
+      ff = data[pos + 9];
+      len = ver === 4 ? ss(data, pos + 4) : be32(data, pos + 4);
+      if(ver === 4){ var alt = be32(data, pos + 4); if(alt !== len && !frameAt(pos + hdr + len) && frameAt(pos + hdr + alt)) len = alt; }   // some writers store plain sizes
+    }
+    if(len <= 0) break;
+    var body = data.subarray(pos + hdr, Math.min(end, pos + hdr + len));
+    pos += hdr + len;
+    if(ver === 4){ if(ff & 0x0c) continue; if(ff & 0x01) body = body.subarray(4); if((ff & 0x02) || (flags & 0x80)) body = unsync(body); }
+    else if(ver === 3 && (ff & 0xc0)) continue;
+    if(id === 'USLT' || id === 'ULT'){ var t = readUSLT(body); if(t.length > plain.length) plain = t; }
+    else if(id === 'TXXX' || id === 'TXX'){   // some taggers put lyrics in a custom text field
+      var enc = body[0], e = term(body, 1, enc), label = dec(body.subarray(1, e), enc).toUpperCase().replace(/[^A-Z]/g, '');
+      if(label === 'USLT' || label.indexOf('LYRIC') >= 0){
+        var x = dec(body.subarray(Math.min(body.length, e + (wide(enc) ? 2 : 1))), enc); if(x.length > plain.length) plain = x; }
+    }
+    else if(id === 'SYLT' || id === 'SLT'){ var s = readSYLT(body); if(s && (!synced || s.lines.length > synced.lines.length)) synced = s; }
+  }
+  if(synced && synced.timed && synced.lines.length >= 2) return { synced: true, lines: synced.lines };
+  if(plain.trim()) return parseLRC(plain);
+  if(synced) return { synced: false, lines: synced.lines.map(function(l){ return { t: null, text: l.text }; }) };
+  return null;
+}
+
+function loadLyrics(s){
+  if(lyrCache[s.file] !== undefined) return Promise.resolve(lyrCache[s.file]);
+  var q = '?f=' + encodeURIComponent(s.file);
+  return fetch('/api/lyrics' + q).then(function(r){ return r.ok ? r.json() : {}; }).then(function(d){
+    var fromFile = d && d.text ? parseLRC(d.text) : null;
+    if(fromFile) return fromFile;
+    return fetch('/id3' + q).then(function(r){ return r.status === 200 ? r.arrayBuffer().then(parseID3) : null; });
+  }).catch(function(){ return null; }).then(function(res){ lyrCache[s.file] = res || null; return lyrCache[s.file]; });
+}
+function showLyricsFor(i){
+  var token = ++lyrToken;
+  setLyrics(null);
+  loadLyrics(songs[i]).then(function(res){ if(token === lyrToken) setLyrics(res); });
+}
+function setLyrics(res){
+  var box = $('lyrics'), inner = $('lyrIn');
+  lyr = res; lyrIdx = -1; lyrEls = []; inner.innerHTML = '';
+  if(res){
+    box.classList.toggle('plain', !res.synced);
+    res.lines.forEach(function(l, n){
+      var d = document.createElement('div'); d.className = 'll' + (l.text ? '' : ' gap');
+      d.textContent = l.text || (res.synced ? '♪' : '');
+      if(res.synced) d.addEventListener('click', function(){ audio.currentTime = l.t; lyrHold = 0; if(audio.paused) play(); syncLyrics(false); });
+      inner.appendChild(d); lyrEls.push(d);
+    });
+  }
+  $('lyrBtn').hidden = !res;
+  lyricsMode();
+}
+function lyricsMode(){
+  var on = lyrOn && !!lyr;
+  document.body.classList.toggle('lyrics-on', on);
+  $('lyrBtn').classList.toggle('active', on);
+  $('lyrics').hidden = !on;
+  if(on){ $('lyrics').scrollTop = 0; syncLyrics(true); }
+}
+function toggleLyrics(){ lyrOn = !lyrOn; save('lyrics', lyrOn); lyricsMode(); }
+function syncLyrics(jump){
+  if(!lyr || !lyr.synced || !document.body.classList.contains('lyrics-on')) return;
+  var t = audio.currentTime + 0.2, idx = -1;
+  for(var i = 0; i < lyr.lines.length && lyr.lines[i].t <= t; i++) idx = i;
+  if(idx === lyrIdx && !jump) return;
+  if(lyrIdx >= 0 && lyrEls[lyrIdx]) lyrEls[lyrIdx].classList.remove('cur');
+  lyrIdx = idx;
+  var box = $('lyrics'), el = idx >= 0 ? lyrEls[idx] : lyrEls[0];
+  if(idx >= 0) el.classList.add('cur');
+  if(el && Date.now() > lyrHold) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: jump ? 'auto' : 'smooth' });
+}
+$('lyrBtn').addEventListener('click', toggleLyrics);
+['wheel', 'touchmove'].forEach(function(n){
+  $('lyrics').addEventListener(n, function(){ lyrHold = Date.now() + 3500; }, { passive: true });   // let the user read ahead without being yanked back
+});
 
 /* ---------- settings: themes, colors, icon, folders ---------- */
 var THEMES = {
@@ -829,7 +1035,7 @@ function applyIcon(){
 }
 function gotSettings(s){
   customIcon = !!s.customIcon; iconVersion = s.iconVersion || 0;
-  $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || '';
+  $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || ''; $('pLyrics').value = s.lyrics || '';
   applyIcon();
 }
 $('pickIcon').addEventListener('click', function(){ $('iconFile').click(); });
@@ -861,7 +1067,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-browse]'), functio
   });
 });
 $('applyFolders').addEventListener('click', function(){
-  post({ songs: $('pSongs').value, icons: $('pIcons').value }).then(function(s){
+  post({ songs: $('pSongs').value, icons: $('pIcons').value, lyrics: $('pLyrics').value }).then(function(s){
     gotSettings(s);
     return fetchLibrary(true).then(function(){
       if(!s.songsFound) hint('folderHint', 'The songs folder was not found. Check the path and that the drive is connected.', 'bad');

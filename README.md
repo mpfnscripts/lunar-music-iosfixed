@@ -6,6 +6,8 @@ A glassy, lunar music player that plays the MP3s you put in
 - `SONGS` - your `.mp3` files
 - `ICONS` - `.png` artwork with the same name as the song (`Moonrise.mp3` -> `Moonrise.png`);
   `default.png` is used for songs without their own
+- `LYRICS` - `.lrc` (timed) or `.txt` lyrics with the same name as the song; lyrics stored
+  inside the MP3 itself are picked up too
 
 ## Getting the IPA (no Mac needed)
 

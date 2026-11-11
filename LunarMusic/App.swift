@@ -49,7 +49,7 @@ enum Library {
     static var customIcon: URL { support.appendingPathComponent("appicon.png") }
 
     static func ensureFolders() {
-        for name in ["SONGS", "ICONS"] {
+        for name in ["SONGS", "ICONS", "LYRICS"] {
             try? fm.createDirectory(at: docs.appendingPathComponent(name), withIntermediateDirectories: true)
         }
         try? fm.createDirectory(at: support, withIntermediateDirectories: true)
@@ -111,6 +111,33 @@ enum Library {
         return out
     }
 
+    /// Text of "<song name>.lrc" (or .txt), preferring one that sits beside the song.
+    static func lyricsText(forSong rel: String) -> String? {
+        let want = key(baseName(rel))
+        let songDir = (rel as NSString).deletingLastPathComponent
+        let candidates = (files(ext: "lrc").sorted() + files(ext: "txt").sorted()).filter { key(baseName($0)) == want }
+        let beside = candidates.first(where: { ($0 as NSString).deletingLastPathComponent == songDir })
+        guard let pick = beside ?? candidates.first,
+              let data = try? Data(contentsOf: docs.appendingPathComponent(pick)), data.count <= 2_000_000 else { return nil }
+        if data.starts(with: [0xFF, 0xFE]) || data.starts(with: [0xFE, 0xFF]) {
+            return String(data: data, encoding: .utf16)
+        }
+        return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1)
+    }
+
+    /// The tag block at the start of an MP3, where embedded lyrics live. The page reads it.
+    static func id3Tag(_ url: URL) -> Data? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? handle.close() }
+        let head = [UInt8](handle.readData(ofLength: 10))
+        guard head.count == 10, head[0] == 0x49, head[1] == 0x44, head[2] == 0x33 else { return nil }
+        let size = (Int(head[6] & 0x7f) << 21) | (Int(head[7] & 0x7f) << 14) | (Int(head[8] & 0x7f) << 7) | Int(head[9] & 0x7f)
+        guard size > 0, size <= 32_000_000 else { return nil }
+        var out = Data(head)
+        out.append(handle.readData(ofLength: size))
+        return out
+    }
+
     /// A file inside the app's folder, or nil if the path tries to leave it.
     static func safeURL(_ rel: String?) -> URL? {
         guard let rel = rel, !rel.isEmpty, !rel.hasPrefix("/"),
@@ -151,6 +178,19 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
             ])
         case "/api/settings":
             respondJSON(urlSchemeTask, Self.settings())
+        case "/api/lyrics":
+            var text: Any = NSNull()
+            if let u = Library.safeURL(file), u.pathExtension.lowercased() == "mp3", let rel = file,
+               let found = Library.lyricsText(forSong: rel) {
+                text = found
+            }
+            respondJSON(urlSchemeTask, ["text": text])
+        case "/id3":
+            if let u = Library.safeURL(file), u.pathExtension.lowercased() == "mp3", let tag = Library.id3Tag(u) {
+                respond(urlSchemeTask, tag, "application/octet-stream")
+            } else {
+                respond(urlSchemeTask, Data(), "application/octet-stream", status: 204)
+            }
         case "/icon":
             if let u = Library.safeURL(file), u.pathExtension.lowercased() == "png", let data = try? Data(contentsOf: u) {
                 respond(urlSchemeTask, data, "image/png")
@@ -178,7 +218,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
             ui = obj
         }
         return [
-            "songs": "", "icons": "", "ui": ui,
+            "songs": "", "icons": "", "lyrics": "", "ui": ui,
             "songsFound": true, "iconsFound": true,
             "customIcon": FileManager.default.fileExists(atPath: Library.customIcon.path),
             "iconVersion": defaults.integer(forKey: "iconVersion"),
