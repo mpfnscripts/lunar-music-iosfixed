@@ -351,10 +351,11 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
         checkForUpdate()
     }
 
-    /// Look for a newer player page (at most every ten minutes). It is applied straight away if
-    /// nothing is playing, otherwise the next time the app is opened while the music is stopped.
+    /// Look for a newer player page every time the app is opened or brought back to the front
+    /// (the short gap only stops double checks). It is applied straight away if nothing is
+    /// playing, otherwise the next time the app is opened while the music is stopped.
     private func checkForUpdate() {
-        guard Date().timeIntervalSince(lastUpdateCheck) > 600 else { return }
+        guard Date().timeIntervalSince(lastUpdateCheck) > 15 else { return }
         lastUpdateCheck = Date()
         PageStore.check { [weak self] result in
             guard let self = self else { return }
