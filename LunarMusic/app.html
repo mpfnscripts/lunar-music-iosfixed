@@ -363,6 +363,96 @@ input[type=color]::-webkit-color-swatch{border:0}
 .drawerfoot{margin-top:26px;display:flex;justify-content:flex-end}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Clunk Mode: dress up as a homemade Python (Tkinter) app ---------- */
+.clunk-only{display:none}
+body.clunk{--ink:#000;--ink-soft:#333;--ink-faint:#555;--line:#808080;--line-bright:#fff;--accent:#0a246a;--accent-rgb:10,36,106;--bg:#d9d9d9;--radius:0px;
+  background:#d9d9d9;color:#000;font-family:Tahoma,"MS Sans Serif","Segoe UI",sans-serif;font-size:13px}
+body.clunk *{text-shadow:none!important;transition:none!important;animation:none!important;letter-spacing:0!important;border-radius:0!important}
+body.clunk #stars,body.clunk .bigmoon,body.clunk #viz,body.clunk .logo,body.clunk .eq,body.clunk .glass::before,body.clunk .disc::after{display:none!important}
+body.clunk .clunk-only{display:block}
+body.clunk span.clunk-only{display:inline}
+body.clunk .app{padding:0 8px 30px;gap:6px;grid-template-rows:auto auto minmax(0,1fr)}
+body.clunk .clunkbar{display:flex;gap:16px;margin:0 -8px;padding:3px 8px;background:#ececec;border-bottom:1px solid #a0a0a0}
+body.clunk .clunkbar span:first-letter{text-decoration:underline}
+body.clunk .clunkstatus{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:3px 8px calc(3px + env(safe-area-inset-bottom));background:#d9d9d9;border-top:2px groove #fff;
+  font-family:"Courier New",monospace;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.clunk header{gap:8px;min-height:28px}
+body.clunk .brand{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#000;font-size:13px;font-weight:400;text-transform:none}
+body.clunk .brand b{font-weight:400}
+body.clunk .count{background:none;border:0;padding:0;color:#000;text-transform:none;font-size:12px}
+body.clunk main{gap:8px}
+body.clunk .glass{background:#d9d9d9;border:2px groove #fff;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.clunk .btn,body.clunk .pill,body.clunk .lyrbtn,body.clunk .tabs button,body.clunk .rowbtn,body.clunk .theme{
+  background:#d9d9d9;border:2px outset #fff;box-shadow:none;color:#000;font-family:inherit;font-size:12px}
+body.clunk .btn:hover,body.clunk .pill:hover,body.clunk .btn.play:hover{box-shadow:none;transform:none;background:#e6e6e6}
+body.clunk .btn:active,body.clunk .pill:active,body.clunk .btn.small.active,body.clunk .lyrbtn.active,body.clunk .tabs button.on,body.clunk .theme.on{border-style:inset;background:#c3c3c3;box-shadow:none;color:#000}
+body.clunk .btn{width:48px;height:30px}
+body.clunk .btn.small{width:38px;height:26px;color:#000}
+body.clunk .btn.play{width:64px;height:34px;border-color:#fff;color:#000}
+body.clunk .btn svg,body.clunk .btn.play svg{width:14px;height:14px}
+body.clunk .controls{gap:6px}
+body.clunk .libhead{padding:8px 8px 6px}
+body.clunk .search{height:24px;background:#fff;border:2px inset #fff;box-shadow:none;padding:0 6px}
+body.clunk .search svg{display:none}
+body.clunk .search input{color:#000;font-family:inherit;font-size:12px}
+body.clunk .search input::placeholder{color:#777}
+body.clunk .tabs{padding:0 8px 6px;gap:2px}
+body.clunk .tabs button{height:24px}
+body.clunk .list{background:#fff;border:2px inset #fff;margin:0 8px 8px;padding:1px}
+body.clunk .row{padding:2px 4px;gap:6px;border:0;color:#000;box-shadow:none}
+body.clunk .row:hover{background:#e8e8e8}
+body.clunk .row.on{background:#0a246a;color:#fff;box-shadow:none}
+body.clunk .row.on .t,body.clunk .row.on .a,body.clunk .row.on .rowbtn{color:#fff}
+body.clunk .thumb{width:22px;height:22px;box-shadow:none;background:#c0c0c0;border:1px solid #808080}
+body.clunk .t{font-size:12px;font-weight:400;color:inherit}
+body.clunk .a{font-size:11px;margin:0;color:#555}
+body.clunk .rowbtn{width:20px;height:20px;border-width:1px;background:none;border-color:transparent}
+body.clunk .rowbtn svg{width:10px;height:10px}
+body.clunk .ghead{padding:6px 4px 2px}
+body.clunk .gname{font-size:12px;font-weight:700;text-transform:none;color:#000}
+body.clunk .plname{color:#000;background:#fff;border:2px inset #fff;font-size:12px;font-weight:400;height:24px}
+body.clunk .empty,body.clunk .empty strong{color:#000;font-size:12px}
+body.clunk .empty code{background:#fff;border:2px inset #fff;color:#000}
+body.clunk .now{padding:12px 16px 14px}
+body.clunk .stage{width:min(220px,30vh)}
+body.clunk .disc{inset:6%;background:#c0c0c0;border:2px inset #fff;box-shadow:none!important}
+body.clunk .title{font-size:15px;font-weight:700;margin-top:6px}
+body.clunk .artist{font-size:12px;color:#333}
+body.clunk .time{font-family:"Courier New",monospace;color:#000}
+body.clunk input[type=range]::-webkit-slider-runnable-track{height:8px;background:linear-gradient(90deg,#0a246a 0,#0a246a var(--p),#fff var(--p));border:2px inset #fff;box-shadow:none;box-sizing:content-box}
+body.clunk input[type=range]::-webkit-slider-thumb{width:11px;height:20px;margin-top:-6px;background:#d9d9d9;border:2px outset #fff;box-shadow:none}
+body.clunk .volume{color:#000}
+body.clunk .lyrbtn{height:24px;padding:0 8px;top:8px;right:8px}
+body.clunk .lyrics{-webkit-mask-image:none;mask-image:none;background:#fff;border:2px inset #fff;--lh:min(220px,30vh)}
+body.clunk .ll{font-size:12px;font-weight:400;color:#555;padding:2px 0;font-family:"Courier New",monospace}
+body.clunk .ll.cur{color:#000;font-weight:700;transform:none;background:#ffff99}
+body.clunk .scrim{background:rgba(0,0,0,.25)}
+body.clunk .drawer{background:#d9d9d9;border:2px outset #fff;top:30px;bottom:30px}
+body.clunk .dhead h2{font-size:13px;font-weight:700;text-transform:none}
+body.clunk .dbody h3{font-size:12px;font-weight:700;text-transform:none;color:#000;margin:14px 0 4px;border-bottom:1px solid #a0a0a0}
+body.clunk .field{font-size:12px;min-height:26px}
+body.clunk .theme{font-size:11px;padding:4px}
+body.clunk .theme i{height:18px;box-shadow:none}
+body.clunk .theme i::after{display:none}
+body.clunk .sw{-webkit-appearance:auto;appearance:auto;width:14px;height:14px;background:none;border:0}
+body.clunk .sw::after{display:none}
+body.clunk input[type=color]{width:40px;height:20px;border:2px inset #fff}
+body.clunk .pill{height:24px;padding:0 10px}
+body.clunk .pill.quiet,body.clunk .pill.danger{color:#000}
+body.clunk .path{background:#fff;border:2px inset #fff;color:#000;height:24px}
+body.clunk .hint{color:#333;font-size:11px}
+body.clunk .hint.ok{color:#006400}
+body.clunk .hint.bad{color:#a00000}
+body.clunk .iconprev{background:#fff;border:2px inset #fff}
+body.clunk .menu,body.clunk .toast{background:#d9d9d9;border:2px outset #fff;box-shadow:none;color:#000;font-size:12px}
+body.clunk .menu .mh{color:#000;text-transform:none;font-size:11px}
+body.clunk .menu button{color:#000;font-size:12px;padding:4px 8px}
+body.clunk .menu button:hover{background:#0a246a;color:#fff}
+body.clunk .menu button:hover i{color:#fff}
+body.clunk.native .app{padding:env(safe-area-inset-top) 8px calc(30px + env(safe-area-inset-bottom))}
+body.clunk.native .drawer{top:calc(6px + env(safe-area-inset-top));bottom:calc(34px + env(safe-area-inset-bottom))}
+body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plname{font-size:16px}
 </style>
 </head>
 <body>
@@ -370,9 +460,10 @@ input[type=color]::-webkit-color-swatch{border:0}
 <div class="bigmoon"></div>
 
 <div class="app">
+  <div class="clunk-only clunkbar"><span>File</span><span>Edit</span><span>Playback</span><span>Help</span></div>
   <header>
     <div class="logo"></div>
-    <div class="brand"><b>Lunar</b> Music</div>
+    <div class="brand"><b>Lunar</b> Music<span class="clunk-only"> - music_player.py</span></div>
     <div class="spacer"></div>
     <div class="count" id="count"></div>
     <button class="btn small" id="openSet" title="Settings" aria-label="Settings">
@@ -445,6 +536,7 @@ input[type=color]::-webkit-color-swatch{border:0}
   </main>
 </div>
 
+<div class="clunk-only clunkstatus" id="clunkStatus">Ready.</div>
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim"></div>
 <aside class="glass drawer" id="drawer" aria-label="Settings">
@@ -455,7 +547,10 @@ input[type=color]::-webkit-color-swatch{border:0}
     </button>
   </div>
   <div class="dbody">
-    <h3 style="margin-top:6px">Theme</h3>
+    <label class="field" style="margin-top:2px"><span>Clunk Mode</span><input type="checkbox" class="sw" id="tClunk"></label>
+    <div class="hint" style="margin-top:0">Disguises Lunar Music as a plain, homemade-looking Python app. Turn it off to get the glass back.</div>
+
+    <h3>Theme</h3>
     <div class="themes" id="themes"></div>
 
     <h3>Colors</h3>
@@ -827,7 +922,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
-  showLyricsFor(i);
+  showLyricsFor(i); clunkStatus();
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -855,8 +950,8 @@ function prev(){
   select(queue[(qpos - 1 + queue.length) % queue.length], true);
 }
 
-audio.addEventListener('play', function(){ document.body.classList.add('playing'); });
-audio.addEventListener('pause', function(){ document.body.classList.remove('playing'); });
+audio.addEventListener('play', function(){ document.body.classList.add('playing'); clunkStatus(); });
+audio.addEventListener('pause', function(){ document.body.classList.remove('playing'); clunkStatus(); });
 audio.addEventListener('playing', function(){ failures = 0; });
 audio.addEventListener('ended', function(){
   if(repeat === 'one'){ audio.currentTime = 0; play(); } else next(true);
@@ -1001,9 +1096,9 @@ addEventListener('resize', sizeStars);
 var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function frame(t){
   if(!document.hidden){
-    if(ui.ring){ drawViz(t); ringShown = true; }
+    if(ui.ring && !ui.clunk){ drawViz(t); ringShown = true; }
     else if(ringShown){ vctx.clearRect(0, 0, viz.width, viz.height); ringShown = false; }
-    if(!still && ui.stars) drawStars(t);
+    if(!still && ui.stars && !ui.clunk) drawStars(t);
   }
   requestAnimationFrame(frame);
 }
@@ -1189,7 +1284,7 @@ var THEMES = {
   frost:   { name: 'Frost',      accent: '#d8f1ff', accent2: '#4a7fa0', bg: '#0b1721', ink: '#f1f8fc' }
 };
 var DEFAULT_UI = { theme: 'lunar', accent: '#b8c6ff', accent2: '#6054be', bg: '#0a0f26', ink: '#eef1fb',
-                   blur: 26, tint: 100, radius: 26, square: false, stars: true, moon: true, ring: true };
+                   blur: 26, tint: 100, radius: 26, square: false, stars: true, moon: true, ring: true, clunk: false };
 var ui = {}, vizRGB = '226,233,255', ringShown = true, saveTimer = 0, customIcon = false, iconVersion = 0;
 var MOON_FAVICON = $('favicon').getAttribute('href');
 Object.keys(DEFAULT_UI).forEach(function(k){ ui[k] = DEFAULT_UI[k]; });
@@ -1218,6 +1313,7 @@ function applyUI(){
   document.body.classList.toggle('square-art', ui.square);
   document.body.classList.toggle('no-stars', !ui.stars);
   document.body.classList.toggle('no-moon', !ui.moon);
+  document.body.classList.toggle('clunk', ui.clunk); $('tClunk').checked = ui.clunk; clunkStatus();
   vizRGB = a.map(function(v){ return Math.round(v + (255 - v) * 0.6); }).join(',');
   $('cAccent').value = ui.accent; $('cAccent2').value = ui.accent2; $('cBg').value = ui.bg; $('cInk').value = ui.ink;
   $('sBlur').value = ui.blur; $('sTint').value = ui.tint; $('sRadius').value = ui.radius;
@@ -1254,10 +1350,14 @@ Object.keys(THEMES).forEach(function(key){
 [['sBlur', 'blur'], ['sTint', 'tint'], ['sRadius', 'radius']].forEach(function(p){
   $(p[0]).addEventListener('input', function(){ ui[p[1]] = +this.value; changed(); });
 });
-[['tSquare', 'square'], ['tStars', 'stars'], ['tMoon', 'moon'], ['tRing', 'ring']].forEach(function(p){
+[['tSquare', 'square'], ['tStars', 'stars'], ['tMoon', 'moon'], ['tRing', 'ring'], ['tClunk', 'clunk']].forEach(function(p){
   $(p[0]).addEventListener('change', function(){ ui[p[1]] = this.checked; changed(); });
 });
 $('resetAll').addEventListener('click', function(){ Object.keys(DEFAULT_UI).forEach(function(k){ ui[k] = DEFAULT_UI[k]; }); changed(); });
+function clunkStatus(){
+  var name = cur >= 0 && songs[cur] ? songs[cur].name + '.mp3' : '';
+  $('clunkStatus').textContent = !name ? 'Ready.' : (audio.paused ? '[paused] ' : '>>> playing ') + name + '   (' + songs.length + ' files loaded)';
+}
 
 function hint(id, text, cls){ var h = $(id); h.textContent = text; h.className = 'hint' + (cls ? ' ' + cls : ''); }
 function applyIcon(){
