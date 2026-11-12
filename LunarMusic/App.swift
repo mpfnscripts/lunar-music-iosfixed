@@ -4,6 +4,7 @@
 
 import UIKit
 import WebKit
+import CryptoKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -147,6 +148,70 @@ enum Library {
     }
 }
 
+// MARK: - Auto-update
+//
+// Almost all of Lunar Music lives in one page (app.html). The app ships with a copy, and also
+// downloads the newest copy from the GitHub repository, so new features arrive without reinstalling.
+// A page that needs newer app code than this build has (see "lunar-native" in app.html) is skipped.
+
+enum PageStore {
+    /// Raise this, and the matching number in app.html, whenever the page starts needing new Swift code.
+    static let nativeLevel = 1
+    static let remote = URL(string: "https://raw.githubusercontent.com/mpfnscripts/lunar-music-iosfixed/main/LunarMusic/app.html")
+
+    enum Result { case none, updated, needsReinstall }
+
+    static var cacheFile: URL { return Library.support.appendingPathComponent("page.html") }
+
+    static func sha(_ data: Data) -> String {
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func bundled() -> Data? {
+        guard let url = Bundle.main.url(forResource: "app", withExtension: "html") else { return nil }
+        return try? Data(contentsOf: url)
+    }
+
+    /// The level of app code a page asks for, or nil if it does not look like a Lunar Music page.
+    static func requiredLevel(_ data: Data) -> Int? {
+        guard data.count > 20_000, let text = String(data: data, encoding: .utf8),
+              text.contains("<title>Lunar Music</title>"),
+              let marker = text.range(of: "name=\"lunar-native\" content=\"") else { return nil }
+        return Int(text[marker.upperBound...].prefix(while: { $0.isNumber }))
+    }
+
+    /// The page to show: a downloaded one if it was fetched while this same build was installed,
+    /// otherwise the copy that came inside the app (so reinstalling a newer IPA always wins).
+    static func current() -> Data? {
+        guard let shipped = bundled() else { return nil }
+        if UserDefaults.standard.string(forKey: "pageForBuild") == sha(shipped),
+           let cached = try? Data(contentsOf: cacheFile),
+           let level = requiredLevel(cached), level <= nativeLevel {
+            return cached
+        }
+        return shipped
+    }
+
+    static func check(_ done: @escaping (Result) -> Void) {
+        guard let remote = remote else { done(.none); return }
+        let request = URLRequest(url: remote, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            var result = Result.none
+            if let data = data, (response as? HTTPURLResponse)?.statusCode == 200,
+               let level = requiredLevel(data), let shipped = bundled(), let showing = current(),
+               sha(data) != sha(showing) {
+                if level > nativeLevel {
+                    result = .needsReinstall
+                } else if (try? data.write(to: cacheFile, options: .atomic)) != nil {
+                    UserDefaults.standard.set(sha(shipped), forKey: "pageForBuild")
+                    result = .updated
+                }
+            }
+            DispatchQueue.main.async { done(result) }
+        }.resume()
+    }
+}
+
 // MARK: - Serves the player page and its data to the web view (lunar://app/...)
 
 final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
@@ -161,8 +226,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
 
         switch path {
         case "/":
-            if let page = Bundle.main.url(forResource: "app", withExtension: "html"),
-               let data = try? Data(contentsOf: page) {
+            if let data = PageStore.current() {
                 respond(urlSchemeTask, data, "text/html; charset=utf-8")
             } else {
                 respond(urlSchemeTask, Data("app.html is missing".utf8), "text/plain", status: 500)
@@ -245,6 +309,9 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
 final class PlayerViewController: UIViewController, WKScriptMessageHandler {
     private var webView: WKWebView!
     private let player = Player()
+    private var updateWaiting = false
+    private var toldAboutReinstall = false
+    private var lastUpdateCheck = Date.distantPast
 
     override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
 
@@ -275,7 +342,38 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
     /// Tell the page what is playing right now (used when the app comes back to the front).
     func syncPage() {
         guard isViewLoaded else { return }
-        send(player.snapshot())
+        if updateWaiting && !player.isPlaying {
+            updateWaiting = false
+            webView.reload()
+        } else {
+            send(player.snapshot())
+        }
+        checkForUpdate()
+    }
+
+    /// Look for a newer player page (at most every ten minutes). It is applied straight away if
+    /// nothing is playing, otherwise the next time the app is opened while the music is stopped.
+    private func checkForUpdate() {
+        guard Date().timeIntervalSince(lastUpdateCheck) > 600 else { return }
+        lastUpdateCheck = Date()
+        PageStore.check { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .updated:
+                if self.player.isPlaying {
+                    self.updateWaiting = true
+                } else {
+                    self.webView.reload()
+                }
+            case .needsReinstall:
+                if !self.toldAboutReinstall {
+                    self.toldAboutReinstall = true
+                    self.send(["type": "toast", "text": "A bigger update is out. Install the newest IPA to get it."])
+                }
+            case .none:
+                break
+            }
+        }
     }
 
     private func send(_ event: [String: Any]) {

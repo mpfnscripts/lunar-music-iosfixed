@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="lunar-native" content="1">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Lunar Music</title>
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230b1024'/%3E%3Cpath d='M41 12a21 21 0 1 0 11 30A17 17 0 0 1 41 12z' fill='%23e9eeff'/%3E%3C/svg%3E">
@@ -1436,6 +1437,7 @@ window.lunarNative = function(ev){
     if(ev.file){ adopt(ev.file, ev.pos); audio.setTime(ev.t || 0); audio.duration = ev.d; audio.emit('loadedmetadata'); audio.emit('timeupdate'); }
     setPlaying(!!ev.playing);
   }
+  else if(ev.type === 'toast'){ toast(String(ev.text || '')); }
   else if(ev.type === 'settings'){
     fetch('/api/settings').then(function(r){ return r.json(); }).then(gotSettings).catch(function(){});
   }

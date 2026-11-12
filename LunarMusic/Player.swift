@@ -28,6 +28,8 @@ final class Player: NSObject, AVAudioPlayerDelegate {
         setupRemoteCommands()
     }
 
+    var isPlaying: Bool { return audio?.isPlaying ?? false }
+
     // MARK: Queue
 
     func setQueue(_ files: [String], repeatMode mode: String) {

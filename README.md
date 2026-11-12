@@ -28,3 +28,9 @@ which signs it with your Apple ID.
 - `LunarMusic/Player.swift` - playback, queue, lock-screen controls
 - `project.yml` - recipe XcodeGen turns into an Xcode project
 - `.github/workflows/build.yml` - the cloud build
+
+## Updates
+
+The app checks this repository for a newer `LunarMusic/app.html` whenever it is opened and
+uses it automatically, so most new features arrive without reinstalling. This only works while
+the repository is public. Changes to the Swift files still need a new IPA.
