@@ -241,7 +241,9 @@ body.playing .btn.play .ipause{display:block}
 .rowbtn svg{width:14px;height:14px;fill:currentColor}
 .rowbtn:hover{color:var(--ink);border-color:var(--line);background:rgba(var(--accent-rgb),.14)}
 .plrow .thumb{display:grid;place-items:center}
-.plhead{display:flex;align-items:center;gap:6px;padding:2px 2px 10px}
+.plhead{padding:2px 2px 10px}
+.plrow1{display:flex;align-items:center;gap:6px}
+.pltools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .plname{flex:1;min-width:0;height:34px;background:none;border:1px solid transparent;border-radius:10px;color:var(--ink);font:inherit;font-size:16px;font-weight:600;padding:0 8px;outline:0;user-select:text;-webkit-user-select:text}
 .plname:hover{border-color:var(--line)}
 .plname:focus{border-color:var(--line-bright);background:rgba(5,8,22,.4)}
@@ -257,6 +259,51 @@ body.playing .btn.play .ipause{display:block}
   padding:9px 18px;border-radius:19px;font-size:13px;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line-bright);
   background:color-mix(in srgb,var(--bg) 80%,rgb(var(--accent-rgb)));box-shadow:0 12px 30px -8px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.act.show{pointer-events:auto}
+.undo{margin-left:14px;background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0}
+body.clunk .undo{color:#0a246a}
+
+/* ---------- narrow screens: nothing may push the page wider than the window ---------- */
+.app{grid-template-columns:minmax(0,1fr)}
+header{min-width:0}
+.brand{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.count{flex:none}
+body.native.offline #count{display:none}
+body.native .ghead{gap:4px}
+
+/* ---------- 2.2 extras ---------- */
+.pill.small{height:28px;padding:0 12px;font-size:12px}
+.listbar{display:flex;gap:8px;flex-wrap:wrap;padding:2px 2px 10px}
+.library{position:relative}
+.az{position:absolute;right:5px;top:118px;bottom:16px;width:18px;z-index:2;display:flex;flex-direction:column;justify-content:center;touch-action:none;cursor:pointer}
+.az[hidden]{display:none}
+.az span{flex:0 1 15px;min-height:0;display:grid;place-items:center;font-size:9.5px;font-weight:600;color:var(--ink-faint);line-height:1}
+.az span:hover{color:var(--ink)}
+.list.has-az{padding-right:26px}
+.stage{touch-action:pan-y;cursor:pointer}
+.disc img{-webkit-user-drag:none;pointer-events:none}
+.pop{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:2;opacity:0}
+.pop svg{width:34%;height:34%;fill:#fff;filter:drop-shadow(0 0 18px rgba(var(--accent-rgb),.9))}
+.pop.go{animation:pop .7s ease-out}
+@keyframes pop{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1.15)}60%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25)}}
+.artist,#dur{cursor:pointer}
+.lyrtools{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px;color:var(--ink-faint)}
+.lyrtools[hidden]{display:none}
+.kv{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:104px;color:var(--ink-faint)}
+.kv b{flex:1;min-width:0;word-break:break-word;font-weight:500;color:var(--ink);user-select:text;-webkit-user-select:text}
+body.compact .row{padding:4px 8px;gap:10px}
+body.compact .thumb{width:32px;height:32px;border-radius:9px}
+body.compact .t{font-size:13.5px}
+body.compact .a{font-size:11.5px;margin-top:0}
+body.clunk .az{top:74px;right:10px}
+body.clunk .az span{color:#000}
+body.clunk .kv span{color:#333}
+body.clunk .kv b{color:#000}
+body.clunk .pop svg{fill:#a00000;filter:none}
+body.clunk .lyrtools{color:#000}
+body.native .az{top:104px}
 
 /* ---------- offline mode ---------- */
 .count.offl{color:#ffd9a8;border-color:rgba(255,200,140,.5)}
@@ -301,12 +348,12 @@ body.native .tabs button{font-size:12px;letter-spacing:.03em}
 .lyrics[hidden]{display:none}
 .lyrics::-webkit-scrollbar{display:none}
 .lyrin{padding:calc(var(--lh) / 2 - 22px) 10px}
-.ll{font-size:19px;line-height:1.35;font-weight:500;color:var(--ink-faint);padding:7px 0;cursor:pointer;
+.ll{font-size:calc(19px * var(--lyr,1));line-height:1.35;font-weight:500;color:var(--ink-faint);padding:7px 0;cursor:pointer;
   transition:color .25s,transform .25s,text-shadow .25s}
 .ll:hover{color:var(--ink-soft)}
 .ll.cur{color:var(--ink);font-weight:650;transform:scale(1.09);text-shadow:0 0 24px rgba(var(--accent-rgb),.6)}
 .lyrics.plain .lyrin{padding:calc(var(--lh) * .16) 10px}
-.lyrics.plain .ll{font-size:16.5px;font-weight:400;color:var(--ink-soft);padding:3px 0;cursor:default}
+.lyrics.plain .ll{font-size:calc(16.5px * var(--lyr,1));font-weight:400;color:var(--ink-soft);padding:3px 0;cursor:default}
 .lyrics.plain .ll.gap{height:16px}
 body.lyrics-on .stage{display:none}
 .lyrbtn.favbtn{right:auto;left:16px;padding:0 9px}
@@ -329,7 +376,7 @@ body.lyrics-on .stage{display:none}
 .about b{color:var(--ink);font-weight:600}
 .about ul{margin:6px 0 0 18px;padding:0}
 body.native .lyrics{--lh:min(72vw,30vh)}
-body.native .ll{font-size:17px}
+body.native .ll{font-size:calc(17px * var(--lyr,1))}
 body.native .lyrbtn{top:12px;right:12px}
 body.native .lyrbtn.favbtn{right:auto;left:12px}
 
@@ -343,7 +390,7 @@ body.native .drawer{top:calc(10px + env(safe-area-inset-top));bottom:calc(10px +
 body.native .now{padding:18px 20px 22px}
 body.native{overflow:hidden}
 body.native .app{height:100%;min-height:0}
-body.native main{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:14px}
+body.native main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:14px}
 body.native .library{order:2;max-height:none;min-height:0}
 body.native .stage{width:min(58vw,27vh)}
 body.native .title{font-size:21px;margin-top:6px}
@@ -549,6 +596,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
         <button type="button" data-tab="queue">Queue</button>
       </div>
       <div class="list" id="list"></div>
+      <div class="az" id="az" hidden></div>
     </section>
 
     <section class="glass now">
@@ -559,9 +607,15 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
         <svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg><span>LYRICS</span>
       </button>
       <div class="lyrics" id="lyrics" hidden><div class="lyrin" id="lyrIn"></div></div>
-      <div class="stage">
+      <div class="lyrtools" id="lyrTools" hidden>
+        <button class="pill small" id="lyrEarly" title="Show the lyrics half a second earlier">Earlier</button>
+        <span id="lyrOffTxt">Lyrics timing</span>
+        <button class="pill small" id="lyrLate" title="Show the lyrics half a second later">Later</button>
+      </div>
+      <div class="stage" title="Double-click to favorite; swipe for next or previous">
+        <div class="pop" id="pop"><svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg></div>
         <canvas id="viz"></canvas>
-        <div class="disc"><img id="art" alt="" hidden></div>
+        <div class="disc"><img id="art" alt="" draggable="false" hidden></div>
       </div>
       <div class="title" id="title" title="Show this song in the list">Lunar Music</div>
       <div class="artist" id="artist">Pick a song to begin</div>
@@ -604,7 +658,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
 <div class="clunk-only clunkstatus" id="clunkStatus">Ready.</div>
 <div class="news" id="news" hidden>
   <div class="glass newsbox" role="dialog" aria-label="What is new">
-    <h2>Updated</h2>
+    <h2 id="newsTitle">Updated</h2>
     <div class="about" id="newsBody"></div>
     <div class="foot"><button class="pill" id="newsOk">Got it</button></div>
   </div>
@@ -636,11 +690,14 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <label class="field"><span>Glass tint</span><input type="range" id="sTint" min="0" max="300"></label>
     <label class="field"><span>Rounded corners</span><input type="range" id="sRadius" min="0" max="44"></label>
     <label class="field"><span>Square artwork</span><input type="checkbox" class="sw" id="tSquare"></label>
+    <label class="field"><span>Compact song list</span><input type="checkbox" class="sw" id="tCompact"></label>
+    <label class="field"><span>Lyrics text size</span><input type="range" id="sLyr" min="70" max="160"></label>
 
     <h3>Scene</h3>
     <label class="field"><span>Twinkling stars</span><input type="checkbox" class="sw" id="tStars"></label>
     <label class="field"><span>Moon in the sky</span><input type="checkbox" class="sw" id="tMoon"></label>
     <label class="field"><span>Ring of light around artwork</span><input type="checkbox" class="sw" id="tRing"></label>
+    <label class="field"><span>Match colors to the artwork</span><input type="checkbox" class="sw" id="tArt"></label>
 
     <h3>App icon</h3>
     <div class="iconrow">
@@ -706,6 +763,14 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <div class="pathrow wrap" style="margin-top:8px"><button class="pill" id="backupMake">Copy my playlists</button><button class="pill" id="backupLoad">Restore from text</button></div>
     <div class="hint" id="backupHint"></div>
 
+    <h3>Your stats</h3>
+    <div class="about" id="stats"></div>
+
+    <div class="desk-only">
+      <h3>Keyboard shortcuts</h3>
+      <div class="pathrow"><button class="pill" id="keysBtn">Show shortcuts</button></div>
+    </div>
+
     <h3>Update log</h3>
     <div class="hint" id="netLine" style="margin:0 0 10px"></div>
     <div class="about" id="about"></div>
@@ -765,6 +830,7 @@ function fetchLibrary(keep){
     fileIdx = {}; baseIdx = {}; libInfo = lib;
     songs.forEach(function(s, i){ var d = describe(s); s.title = d.title; s.artist = d.artist; s.hay = (s.name + ' ' + s.folder).toLowerCase(); fileIdx[s.file] = i;
       var base = s.file.split(/[\\/]/).pop().toLowerCase(); if(!(base in baseIdx)) baseIdx[base] = i; });
+    normalizeLists(); noteSeen();
     renderList();
     cur = -1;
     if(keep && playingFile){ cur = indexOfFile(playingFile); }
@@ -806,6 +872,7 @@ function empty(head, body, code){
   listEl.appendChild(d);
 }
 /* ---------- library views: Songs, Artists, Playlists ---------- */
+var scrollPos = {};
 var view = load('tab', 'artists'), openPl = null, libInfo = { songsFound: true, songsPath: '' }, heads = [];
 var playlists = [], ctxDesc = { type: 'all' }, fileIdx = {}, baseIdx = {}, UNKNOWN = 'Unknown artist';
 var ICON = {
@@ -816,6 +883,7 @@ var ICON = {
   list: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg>',
   heart: '<svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg>',
   up: '<svg viewBox="0 0 24 24"><path d="M12 6.5 19.4 14 18 15.4l-6-6-6 6L4.6 14z"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.2l-2.6 3.3-1.3-1.6L13.8 6H17V3zM3 6h4.2l8.6 11H17v-3l4 4-4 4v-3h-2.2L6.2 8H3V6zm0 11h3.2l2.5-3.2 1.3 1.6L7.2 19H3v-2z"/></svg>',
   down: '<svg viewBox="0 0 24 24"><path d="M12 17.5 4.6 10 6 8.6l6 6 6-6L19.4 10z"/></svg>',
   clock: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm-1 2.5v5l4.2 2.5 1-1.7-3.2-1.9V7.5z"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.2 6L12 16.7 6.5 19.6l1.2-6L3.2 9.4l6.1-.8z"/></svg>'
@@ -833,7 +901,7 @@ function groupKey(i){ return groupName(i).trim().toLowerCase(); }
 function byTitle(a, b){ return songs[a].title.localeCompare(songs[b].title, undefined, { sensitivity: 'base' }) || a - b; }
 function allIdx(){ return songs.map(function(_, i){ return i; }); }
 var favPl = { id: '__favs', name: 'Favorites', files: [], fixed: true };   // a built-in playlist that cannot be renamed or deleted
-function plById(id){ if(id === favPl.id) return favPl; if(id === recentPl.id) return recentPl; if(id === topPl.id){ topPl.files = topFiles(); return topPl; } for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
+function plById(id){ if(id === favPl.id) return favPl; if(id === newPl.id){ newPl.files = newFiles(); return newPl; } if(id === recentPl.id) return recentPl; if(id === topPl.id){ topPl.files = topFiles(); return topPl; } for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
 function isFav(file){ return favPl.files.indexOf(file) >= 0; }
 function updateFav(){
   var b = $('favBtn'), on = cur >= 0 && songs[cur] && isFav(songs[cur].file);
@@ -843,7 +911,7 @@ function updateFav(){
 function toggleFav(){
   if(cur < 0) return;
   var f = songs[cur].file;
-  if(isFav(f)){ removeFromPlaylist(favPl.id, f); toast('Removed from Favorites'); } else addToPlaylist(favPl, f);
+  if(isFav(f)) removeFromPlaylist(favPl.id, f); else addToPlaylist(favPl, f);
 }
 
 /* The list of songs a view (or the play queue) is made of. */
@@ -859,7 +927,36 @@ function listFor(d){
     if(p) p.files.forEach(function(f){ var i = indexOfFile(f); if(i >= 0 && out.indexOf(i) < 0) out.push(i); });
     return out;
   }
+  if(songSort === 'artist') return listFor({ type: 'artists' });
+  if(songSort === 'plays') return allIdx().sort(function(a, b){ return (plays[songs[b].file] || 0) - (plays[songs[a].file] || 0) || byTitle(a, b); });
+  if(songSort === 'new') return allIdx().sort(function(a, b){ return (seen[songs[b].file] || 0) - (seen[songs[a].file] || 0) || byTitle(a, b); });
   return allIdx().sort(byTitle);
+}
+var songSort = load('sort', 'title'), SORTS = [['title', 'Title'], ['artist', 'Artist'], ['plays', 'Most played'], ['new', 'Newest']];
+if(!SORTS.some(function(x){ return x[0] === songSort; })) songSort = 'title';
+function sortLabel(){ for(var i = 0; i < SORTS.length; i++) if(SORTS[i][0] === songSort) return SORTS[i][1]; return 'Title'; }
+function nextSort(){
+  for(var i = 0; i < SORTS.length; i++) if(SORTS[i][0] === songSort){ songSort = SORTS[(i + 1) % SORTS.length][0]; break; }
+  save('sort', songSort);
+  if(ctxDesc.type === 'all') buildQueue();          // what plays next follows the order on screen
+  renderList(); listEl.scrollTop = 0;
+}
+function shufflePlay(desc){ if(!shuffle) setShuffle(true); playAll(desc); }
+
+/* Songs the app has not seen before count as "recently added" for two weeks. */
+var seen = {}, seenInit = false, settingsLoaded = false, NEW_DAYS = 14;
+var newPl = { id: '__new', name: 'Recently added', files: [], fixed: true, auto: true };
+function noteSeen(){
+  if(!settingsLoaded || !songs.length) return;
+  var now = Date.now(), dirty = false;
+  songs.forEach(function(s){ if(!(s.file in seen)){ seen[s.file] = seenInit ? now : 0; dirty = true; } });   // the first time, everything already here counts as old
+  Object.keys(seen).forEach(function(f){ if(indexOfFile(f) < 0){ delete seen[f]; dirty = true; } });
+  if(!seenInit){ seenInit = true; dirty = true; }
+  if(dirty) saveAll();
+}
+function newFiles(){
+  var since = Date.now() - NEW_DAYS * 86400000;
+  return Object.keys(seen).filter(function(f){ return seen[f] > since && indexOfFile(f) >= 0; }).sort(function(a, b){ return seen[b] - seen[a] || a.localeCompare(b); });
 }
 function playFrom(desc, i){ ctxDesc = desc; cur = i; buildQueue(); select(i, true); }
 function playAll(desc){ ctxDesc = desc; cur = -1; buildQueue(); if(queue.length) select(queue[0], true); }
@@ -917,14 +1014,21 @@ function renderList(){
         var h = el('div', 'ghead'), cnt = el('span', 'gcount');
         h.appendChild(el('span', 'gname', groupName(i))); h.appendChild(cnt);
         h.appendChild(iconBtn('rowbtn', ICON.plus, 'Add all of ' + groupName(i) + ' to a playlist', function(b){ openMenu(listFor({ type: 'artist', key: k }), b); }));
+        h.appendChild(iconBtn('rowbtn', ICON.shuffle, 'Shuffle ' + groupName(i), function(){ shufflePlay({ type: 'artist', key: k }); }));
         h.appendChild(iconBtn('rowbtn', ICON.play, 'Play ' + groupName(i), function(){ playAll({ type: 'artist', key: k }); }));
-        head = { el: h, cnt: cnt, rows: [] }; heads.push(head); frag.appendChild(h);
+        head = { el: h, cnt: cnt, rows: [], key: k, name: groupName(i) }; heads.push(head); frag.appendChild(h);
       }
       var r = songRow(i, { type: 'artists' }, { hideArtist: true });
       head.rows.push(r); head.cnt.textContent = plural(head.rows.length); frag.appendChild(r);
     });
   }
-  else listFor({ type: 'all' }).forEach(function(i){ frag.appendChild(songRow(i, { type: 'all' })); });
+  else {
+    var bar = el('div', 'listbar');
+    bar.appendChild(iconBtn('pill small', 'Shuffle all', 'Play every song in a random order', function(){ shufflePlay({ type: 'all' }); }));
+    bar.appendChild(iconBtn('pill small', 'Sort: ' + sortLabel(), 'Change the order of this list', nextSort));
+    frag.appendChild(bar);
+    listFor({ type: 'all' }).forEach(function(i){ frag.appendChild(songRow(i, { type: 'all' })); });
+  }
   listEl.appendChild(frag);
   filter(); mark();
 }
@@ -938,19 +1042,19 @@ function renderPlaylists(frag){
   add.addEventListener('click', make);
   add.addEventListener('keydown', function(e){ if(e.key === 'Enter') make(); });
   frag.appendChild(add);
-  [favPl, recentPl, topPl].concat(playlists).forEach(function(p){
+  [favPl, newPl, recentPl, topPl].concat(playlists).forEach(function(p){
     var list = listFor({ type: 'playlist', id: p.id });
     if(p.auto && !list.length) return;                // the automatic lists appear once they have something in them
     var r = el('div', 'row plrow'); r.tabIndex = 0; r.dataset.name = p.name.toLowerCase();
     var t, first = list.length ? songs[list[0]] : null;
-    if(p.fixed){ t = document.createElement('div'); t.innerHTML = p === recentPl ? ICON.clock : p === topPl ? ICON.star : ICON.heart; t.style.background = 'rgba(var(--accent-rgb),.16)'; t.firstChild.style.cssText = 'width:20px;height:20px;fill:var(--ink)'; }
+    if(p.fixed){ t = document.createElement('div'); t.innerHTML = p === recentPl ? ICON.clock : p === topPl ? ICON.star : p === newPl ? ICON.plus : ICON.heart; t.style.background = 'rgba(var(--accent-rgb),.16)'; t.firstChild.style.cssText = 'width:20px;height:20px;fill:var(--ink)'; }
     else if(first && first.icon){ t = document.createElement('img'); t.loading = 'lazy'; t.alt = ''; t.src = iconUrl(first); }
     else t = document.createElement('div');
     t.className = 'thumb';
     var meta = el('div', 'meta'); meta.appendChild(el('div', 't', p.name)); meta.appendChild(el('div', 'a', plural(list.length)));
     r.appendChild(t); r.appendChild(meta);
     if(list.length) r.appendChild(iconBtn('rowbtn', ICON.play, 'Play ' + p.name, function(){ playAll({ type: 'playlist', id: p.id }); }));
-    function open(){ openPl = p.id; $('q').value = ''; renderList(); }
+    function open(){ scrollPos.playlists = listEl.scrollTop; openPl = p.id; $('q').value = ''; renderList(); listEl.scrollTop = 0; }
     r.addEventListener('click', open);
     r.addEventListener('keydown', function(e){ if(e.key === 'Enter') open(); });
     frag.appendChild(r);
@@ -963,20 +1067,32 @@ function renderPlaylists(frag){
 }
 
 function renderPlaylist(frag, p){
-  var desc = { type: 'playlist', id: p.id }, list = listFor(desc), head = el('div', 'plhead');
-  head.appendChild(iconBtn('rowbtn', ICON.back, 'Back to playlists', function(){ openPl = null; renderList(); }));
+  var desc = { type: 'playlist', id: p.id }, list = listFor(desc), wrap = el('div', 'plhead'), head = el('div', 'plrow1'), tools = el('div', 'pltools');
+  wrap.appendChild(head); wrap.appendChild(tools);
+  head.appendChild(iconBtn('rowbtn', ICON.back, 'Back to playlists', function(){ openPl = null; renderList(); listEl.scrollTop = scrollPos.playlists || 0; }));
   var name = el('input', 'plname'); name.type = 'text'; name.value = p.name; name.maxLength = 60; name.spellcheck = false;
   name.setAttribute('aria-label', 'Playlist name'); name.readOnly = !!p.fixed;
   name.addEventListener('change', function(){ p.name = name.value.trim() || p.name; name.value = p.name; saveAll(); });
   name.addEventListener('keydown', function(e){ if(e.key === 'Enter') name.blur(); });
   head.appendChild(name);
-  if(list.length) head.appendChild(iconBtn('pill', 'Play', 'Play this playlist', function(){ playAll(desc); }));
-  var del = iconBtn('pill quiet danger', 'Delete', 'Delete this playlist', function(){
-    if(del.dataset.sure){ playlists.splice(playlists.indexOf(p), 1); openPl = null; saveAll(); renderList(); toast('Deleted ' + p.name); }
+  if(list.length){
+    tools.appendChild(iconBtn('pill small', 'Play', 'Play this playlist', function(){ playAll(desc); }));
+    tools.appendChild(iconBtn('pill small', 'Shuffle', 'Play this playlist in a random order', function(){ shufflePlay(desc); }));
+    tools.appendChild(iconBtn('pill small', 'Copy', 'Make a copy of this playlist', function(){
+      var c = newPlaylist(); c.name = (p.name + ' copy').slice(0, 60); c.files = list.map(function(i){ return songs[i].file; });
+      saveAll(); openPl = c.id; renderList(); toast('Copied to "' + c.name + '"');
+    }));
+  }
+  var del = iconBtn('pill small quiet danger', 'Delete', 'Delete this playlist', function(){
+    if(del.dataset.sure){
+      var was = playlists.indexOf(p);
+      playlists.splice(was, 1); openPl = null; saveAll(); renderList();
+      toast('Deleted ' + p.name, function(){ playlists.splice(Math.min(was, playlists.length), 0, p); saveAll(); if(view === 'playlists') renderList(); });
+    }
     else { del.dataset.sure = '1'; del.textContent = 'Sure?'; setTimeout(function(){ delete del.dataset.sure; del.textContent = 'Delete'; }, 3000); }
   });
-  if(!p.fixed) head.appendChild(del);
-  frag.appendChild(head);
+  if(!p.fixed) tools.appendChild(del);
+  frag.appendChild(wrap);
   list.forEach(function(i){
     var f = songs[i].file;
     if(p.auto){ frag.appendChild(songRow(i, desc, p === topPl ? { sub: (plays[f] || 0) + (plays[f] === 1 ? ' play' : ' plays') + (songs[i].artist ? '  \u00b7  ' + songs[i].artist : '') } : null)); return; }
@@ -988,7 +1104,7 @@ function renderPlaylist(frag, p){
   });
   if(!list.length){
     var hint = el('div', 'empty'); hint.appendChild(el('strong', null, 'This playlist is empty'));
-    hint.appendChild(document.createTextNode(p.auto ? 'Songs you play will show up here.' : p.fixed ? 'Press the heart on the player to add the song that is playing.' : 'Go to Songs or Artists and press + on a song to add it.'));
+    hint.appendChild(document.createTextNode(p === newPl ? 'Songs you add show up here for two weeks.' : p.auto ? 'Songs you play will show up here.' : p.fixed ? 'Press the heart on the player to add the song that is playing.' : 'Go to Songs or Artists and press + on a song to add it.'));
     frag.appendChild(hint);
   }
 }
@@ -1005,6 +1121,12 @@ function renderQueue(frag){
   frag.appendChild(songRow(cur, null, { onPick: toggle, buttons: [] }));
   var rest = queue.slice(at + 1), shown = rest.slice(0, 150);
   frag.appendChild(sectionHead('Up next', rest.length ? plural(rest.length) : ''));
+  if(rest.length){
+    var qb = el('div', 'listbar');
+    qb.appendChild(iconBtn('pill small', 'Save as playlist', 'Save the queue as a playlist', saveQueue));
+    qb.appendChild(iconBtn('pill small', 'Clear', 'Remove everything after this song', clearQueue));
+    frag.appendChild(qb);
+  }
   shown.forEach(function(i){
     frag.appendChild(songRow(i, null, { onPick: function(){ select(i, true); },
       buttons: [{ icon: ICON.cross, title: 'Remove from queue', fn: function(){ dequeue(i); } }] }));
@@ -1017,6 +1139,22 @@ function dequeue(i){
   if(at < 0 || i === cur) return;
   queue.splice(at, 1); qpos = queue.indexOf(cur);
   sendQueue(); queueChanged();
+  toast('Removed from the queue', function(){
+    if(queue.indexOf(i) >= 0) return;
+    queue.splice(Math.min(at, queue.length), 0, i); qpos = queue.indexOf(cur); sendQueue(); queueChanged();
+  });
+}
+function clearQueue(){
+  var at = queue.indexOf(cur), saved = queue.slice();
+  if(at < 0 || at === queue.length - 1) return;
+  queue = queue.slice(0, at + 1); qpos = at; sendQueue(); queueChanged();
+  toast('Queue cleared', function(){ queue = saved; qpos = queue.indexOf(cur); sendQueue(); queueChanged(); });
+}
+function saveQueue(){
+  var at = Math.max(0, queue.indexOf(cur)), p = newPlaylist(), d = new Date();
+  p.name = 'Queue ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+  queue.slice(at).forEach(function(i){ p.files.push(songs[i].file); });
+  saveAll(); toast('Saved as "' + p.name + '"');
 }
 function nextIndex(){
   if(cur < 0 || !queue.length) return -1;
@@ -1082,8 +1220,13 @@ function addToPlaylist(p, file){
 }
 function removeFromPlaylist(id, file){
   var p = plById(id); if(!p) return;
-  var k = p.files.indexOf(file); if(k >= 0) p.files.splice(k, 1);
+  var k = p.files.indexOf(file); if(k < 0) return;
+  p.files.splice(k, 1);
   saveAll(); playlistChanged(p); updateFav();
+  toast('Removed from ' + p.name, function(){
+    if(p.files.indexOf(file) < 0) p.files.splice(Math.min(k, p.files.length), 0, file);
+    saveAll(); playlistChanged(p); updateFav();
+  });
 }
 function playlistChanged(p){
   if(ctxDesc.type === 'playlist' && ctxDesc.id === p.id) buildQueue();    // keep what is playing in step
@@ -1093,6 +1236,28 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.2', when: 'Nov 13', notes: [
+    'Sort the Songs tab by title, artist, most played or newest',
+    'Shuffle buttons: Shuffle all, and on every artist and playlist',
+    'Playlists and favorites now sync through Google Drive along with your music',
+    'Copy a playlist',
+    'Keyboard shortcut list (press ?), plus new keys: M mutes, 0 to 9 jump through the song, Q opens the queue',
+    'Song info in the + menu',
+    'Double-tap the artwork to favorite the song',
+    'Swipe the artwork left or right for the next or previous song',
+    'A to Z strip at the edge of long Songs and Artists lists',
+    'Your stats in Settings',
+    'Queue: Clear, and Save as playlist',
+    'Recently added: an automatic playlist of songs from the last two weeks',
+    'Match colors to the artwork (Settings)',
+    'Compact song list (Settings)',
+    'Lyrics text size (Settings)',
+    'Nudge timed lyrics earlier or later; remembered for each song',
+    'Tap the song length to show the time left instead',
+    'Tap the artist on the player to jump to that artist',
+    'Undo after removing a song from a playlist or the queue, clearing the queue, or deleting a playlist',
+    'Each tab remembers where you scrolled to; tap the tab you are on to go back to the top'
+  ] },
   { v: '2.1', when: 'Nov 13', notes: [
     'Offline mode: when GitHub cannot be reached the app shows an Offline badge, keeps playing your music, and pauses update checks and sync until the connection is back',
     'Settings shows whether you are connected'
@@ -1149,14 +1314,41 @@ function showNews(seen){
   if(fresh.length === CHANGELOG.length) fresh = [CHANGELOG[0]];      // unknown older version: just show the newest
   if(!fresh.length) return;
   logInto($('newsBody'), fresh);
-  $('news').hidden = false; $('newsOk').focus();
+  $('newsTitle').textContent = 'Updated'; $('news').hidden = false; $('newsOk').focus();
 }
 function closeNews(){ $('news').hidden = true; }
+function openModal(title, rows){            // rows: [label, value] pairs
+  var box = $('newsBody'); box.innerHTML = '';
+  rows.forEach(function(r){ var d = el('div', 'kv'); d.appendChild(el('span', null, r[0])); d.appendChild(el('b', null, r[1])); box.appendChild(d); });
+  $('newsTitle').textContent = title; $('news').hidden = false; $('newsOk').focus();
+}
+function songInfo(i){
+  var s = songs[i], lists = playlists.filter(function(p){ return p.files.indexOf(s.file) >= 0; }).map(function(p){ return p.name; });
+  var n = plays[s.file] || 0, added = seen[s.file], known = lyrCache[s.file];
+  openModal('Song info', [
+    ['Title', s.title], ['Artist', s.artist || 'Unknown'], ['File', s.file.split(/[\\/]/).pop()], ['Folder', s.folder || '(main folder)'],
+    ['Played', n + (n === 1 ? ' time' : ' times')], ['Favorite', isFav(s.file) ? 'Yes' : 'No'],
+    ['Playlists', lists.length ? lists.join(', ') : 'None'],
+    ['Artwork', s.icon ? 'Yes' : 'No'], ['Lyrics', known === undefined ? 'Play the song to check' : known ? (known.synced ? 'Yes, timed' : 'Yes') : 'No'],
+    ['Added', added ? new Date(added).toLocaleDateString() : 'Before Lunar Music started keeping track']
+  ]);
+}
+function showKeys(){
+  openModal('Keyboard shortcuts', [
+    ['Space', 'Play or pause'], ['N / P', 'Next / previous song'], ['\u2190 / \u2192', 'Back / forward 5 seconds'], ['0 to 9', 'Jump to 0% to 90% of the song'],
+    ['\u2191 / \u2193', 'Volume up / down'], ['M', 'Mute'], ['S', 'Shuffle'], ['R', 'Repeat'], ['F', 'Favorite'], ['L', 'Lyrics'],
+    ['Q', 'Queue tab'], ['/', 'Search'], ['K', 'Clunk Mode'], ['?', 'This list'], ['Esc', 'Close']
+  ]);
+}
+$('keysBtn').addEventListener('click', showKeys);
 $('newsOk').addEventListener('click', closeNews);
 $('news').addEventListener('click', function(e){ if(e.target === $('news')) closeNews(); });
 function loadPlaylists(blob){
   if(blob && Array.isArray(blob.favs)){ favPl.files = blob.favs.filter(function(f){ return typeof f === 'string'; }); updateFav(); }
   loadSync(blob && blob.sync);
+  if(blob && blob.seen && typeof blob.seen === 'object'){ seen = {}; Object.keys(blob.seen).forEach(function(f){ if(typeof blob.seen[f] === 'number') seen[f] = blob.seen[f]; }); }
+  if(blob && blob.seenInit === true) seenInit = true;
+  if(blob && blob.lyrOff && typeof blob.lyrOff === 'object'){ lyrOff = {}; Object.keys(blob.lyrOff).forEach(function(f){ if(typeof blob.lyrOff[f] === 'number') lyrOff[f] = blob.lyrOff[f]; }); }
   if(blob && Array.isArray(blob.recent)) recentPl.files = blob.recent.filter(function(f){ return typeof f === 'string'; }).slice(0, 50);
   if(blob && blob.plays && typeof blob.plays === 'object'){
     plays = {}; Object.keys(blob.plays).forEach(function(f){ var n = blob.plays[f]; if(typeof n === 'number' && n > 0) plays[f] = Math.floor(n); });
@@ -1181,6 +1373,9 @@ function openMenu(target, anchor){
     var pn = el('button'); pn.type = 'button'; pn.appendChild(el('i', null, '▸')); pn.appendChild(el('span', null, 'Play next'));
     pn.addEventListener('click', function(){ closeMenu(); playNext(idxs[0]); });
     m.appendChild(pn);
+    var si = el('button'); si.type = 'button'; si.appendChild(el('i', null, 'i')); si.appendChild(el('span', null, 'Song info'));
+    si.addEventListener('click', function(){ closeMenu(); songInfo(idxs[0]); });
+    m.appendChild(si);
   }
   m.appendChild(el('div', 'mh', many ? 'Add ' + plural(files.length) + ' to playlist' : 'Add to playlist'));
   [favPl].concat(playlists).forEach(function(p){
@@ -1189,7 +1384,7 @@ function openMenu(target, anchor){
     b.addEventListener('click', function(){
       closeMenu();
       if(many) addMany(p, files);
-      else if(has){ removeFromPlaylist(p.id, file); toast('Removed from ' + p.name); }
+      else if(has) removeFromPlaylist(p.id, file);
       else addToPlaylist(p, file);
     });
     m.appendChild(b);
@@ -1206,13 +1401,24 @@ function openMenu(target, anchor){
 document.addEventListener('pointerdown', function(e){ if(menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
 listEl.addEventListener('scroll', closeMenu, { passive: true });
 var toastTimer = 0;
-function toast(text){
-  var t = $('toast'); t.textContent = text; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1900);
+function toast(text, undo){        // pass an undo function to offer "Undo" for a few seconds
+  var t = $('toast'); t.textContent = text; t.classList.toggle('act', !!undo);
+  if(undo){
+    var b = el('button', 'undo', 'Undo'); b.type = 'button';
+    b.addEventListener('click', function(){ t.classList.remove('show'); undo(); });
+    t.appendChild(b);
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, undo ? 5500 : 1900);
 }
 
 Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function(b){
-  b.addEventListener('click', function(){ view = b.dataset.tab; openPl = null; save('tab', view); $('q').value = ''; renderList(); listEl.scrollTop = 0; });
+  b.addEventListener('click', function(){
+    if(b.dataset.tab === view && !openPl && !$('q').value){ listEl.scrollTo({ top: 0, behavior: 'smooth' }); return; }    // tapping the tab you are on goes back to the top
+    scrollPos[view] = openPl ? (scrollPos[view] || 0) : listEl.scrollTop;
+    view = b.dataset.tab; openPl = null; save('tab', view); $('q').value = ''; renderList();
+    listEl.scrollTop = scrollPos[view] || 0;                                          // each tab remembers where you were
+  });
 });
 
 function filter(){
@@ -1227,8 +1433,34 @@ function filter(){
     none.appendChild(document.createTextNode('No match for "' + $('q').value.trim() + '" here.'));
     listEl.appendChild(none);
   }
+  buildAZ();
 }
 $('qClear').addEventListener('click', function(e){ e.preventDefault(); $('q').value = ''; filter(); $('q').focus(); });
+/* A-Z strip at the edge of long lists: tap or drag to jump. */
+function azKey(text){ var c = String(text || '').trim().charAt(0).toUpperCase(); return c >= 'A' && c <= 'Z' ? c : '#'; }
+var azMap = {};
+function buildAZ(){
+  var strip = $('az'); azMap = {}; strip.innerHTML = '';
+  var ok = songs.length >= 20 && !$('q').value.trim();
+  if(ok && view === 'songs' && songSort === 'title') listFor({ type: 'all' }).forEach(function(i){ var k = azKey(songs[i].title); if(!azMap[k] && rows[i]) azMap[k] = rows[i]; });
+  else if(ok && view === 'artists') heads.forEach(function(h){ var k = azKey(h.name); if(!azMap[k]) azMap[k] = h.el; });
+  var letters = Object.keys(azMap).sort(function(a, b){ return a === '#' ? 1 : b === '#' ? -1 : a < b ? -1 : 1; });
+  var show = letters.length >= 3;
+  strip.hidden = !show; listEl.classList.toggle('has-az', show);
+  if(show) letters.forEach(function(k){ var sp = el('span', null, k); sp.dataset.k = k; strip.appendChild(sp); });
+  if(show && strip.clientHeight < letters.length * 10){ strip.hidden = true; listEl.classList.remove('has-az'); }     // too short to read: leave it out
+}
+window.addEventListener('resize', function(){ buildAZ(); });
+function azJump(e){
+  var t = document.elementFromPoint(e.clientX, e.clientY);
+  if(t && t.dataset && t.dataset.k && azMap[t.dataset.k]) listEl.scrollTop = Math.max(0, azMap[t.dataset.k].offsetTop - 4);
+}
+(function(){
+  var strip = $('az'), down = false;
+  strip.addEventListener('pointerdown', function(e){ down = true; azJump(e); e.preventDefault(); });
+  strip.addEventListener('pointermove', function(e){ if(down) azJump(e); });
+  window.addEventListener('pointerup', function(){ down = false; });
+})();
 function mark(){
   rows.forEach(function(r, i){ r.classList.toggle('on', i === cur); });
 }
@@ -1287,7 +1519,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
-  showLyricsFor(i); clunkStatus(); updateFav(); counted = null; queueChanged();
+  showLyricsFor(i); clunkStatus(); updateFav(); counted = null; queueChanged(); artColor(i);
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -1329,8 +1561,35 @@ audio.addEventListener('error', function(){
   else { $('artist').textContent = 'These files could not be played'; }
 });
 var resumeAt = null, posSaved = 0;
+var showRemain = !!load('remain', false);
+function durText(){ return showRemain && audio.duration ? '-' + fmt(Math.max(0, audio.duration - audio.currentTime)) : fmt(audio.duration); }
+$('dur').title = 'Tap to switch between total time and time left';
+$('dur').addEventListener('click', function(){ showRemain = !showRemain; save('remain', showRemain); $('dur').textContent = durText(); });
+$('artist').addEventListener('click', function(){            // jump to this artist in the Artists tab
+  if(cur < 0) return;
+  var key = groupKey(cur);
+  view = 'artists'; openPl = null; save('tab', view); $('q').value = ''; renderList();
+  heads.forEach(function(h){ if(h.key === key) listEl.scrollTop = Math.max(0, h.el.offsetTop - 4); });
+  if(rows[cur]){ rows[cur].classList.remove('flash'); void rows[cur].offsetWidth; rows[cur].classList.add('flash'); }
+});
+(function(){                                                  // artwork: double-tap to favorite, swipe for next / previous
+  var st = document.querySelector('.stage'), lastTap = 0, sx = 0, sy = 0, swiped = false;
+  st.addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; swiped = false; });
+  st.addEventListener('pointerup', function(e){
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if(Math.abs(dx) > 60 && Math.abs(dy) < 60){ swiped = true; if(dx < 0) next(false); else prev(); }
+  });
+  st.addEventListener('click', function(){
+    if(swiped){ swiped = false; return; }
+    var now = Date.now();
+    if(now - lastTap < 380){
+      lastTap = 0;
+      if(cur >= 0){ toggleFav(); var pop = $('pop'); pop.classList.remove('go'); void pop.offsetWidth; pop.classList.add('go'); }
+    } else lastTap = now;
+  });
+})();
 audio.addEventListener('loadedmetadata', function(){
-  $('dur').textContent = fmt(audio.duration);
+  $('dur').textContent = durText();
   var r = resumeAt, go = autoResume; resumeAt = null; autoResume = false;      // pick up where things stopped, once
   if(r && cur >= 0 && songs[cur].file === r.file && r.t > 2 && r.t < audio.duration - 5){
     audio.currentTime = r.t;
@@ -1344,6 +1603,7 @@ audio.addEventListener('timeupdate', function(){
   if(seeking || !audio.duration) return;
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
   $('cur').textContent = fmt(audio.currentTime);
+  if(showRemain) $('dur').textContent = durText();
   if(Date.now() - posSaved > 5000){ posSaved = Date.now(); savePos(); }
   if(cur >= 0 && counted !== songs[cur].file && !audio.paused && audio.currentTime > 5) notePlay(songs[cur].file);
   syncLyrics(false);
@@ -1408,6 +1668,10 @@ document.addEventListener('keydown', function(e){
   else if(k === 'l' || k === 'L'){ if(lyr) toggleLyrics(); }
   else if(k === 'f' || k === 'F') toggleFav();
   else if(k === 'k' || k === 'K') quickClunk();
+  else if(k === 'm' || k === 'M') $('mute').dispatchEvent(new Event('click'));
+  else if(k === 'q' || k === 'Q') document.querySelector('#tabs button[data-tab=queue]').click();
+  else if(k === '?') showKeys();
+  else if(k >= '0' && k <= '9' && k.length === 1){ if(audio.duration) audio.currentTime = audio.duration * (+k) / 10; }
   else if(k === '/'){ e.preventDefault(); $('q').focus(); }
 });
 
@@ -1627,7 +1891,7 @@ function setLyrics(res){
     res.lines.forEach(function(l, n){
       var d = document.createElement('div'); d.className = 'll' + (l.text ? '' : ' gap');
       d.textContent = l.text || (res.synced ? '♪' : '');
-      if(res.synced) d.addEventListener('click', function(){ audio.currentTime = l.t; lyrHold = 0; if(audio.paused) play(); syncLyrics(false); });
+      if(res.synced) d.addEventListener('click', function(){ audio.currentTime = Math.max(0, l.t - lyrShift()); lyrHold = 0; if(audio.paused) play(); syncLyrics(false); });
       inner.appendChild(d); lyrEls.push(d);
     });
   }
@@ -1639,12 +1903,26 @@ function lyricsMode(){
   document.body.classList.toggle('lyrics-on', on);
   $('lyrBtn').classList.toggle('active', on);
   $('lyrics').hidden = !on;
+  $('lyrTools').hidden = !(on && lyr.synced);
+  lyrShiftText(); buildAZ();
   if(on){ $('lyrics').scrollTop = 0; syncLyrics(true); }
 }
+/* Timed lyrics that run early or late can be nudged per song; the nudge is remembered. */
+var lyrOff = {};
+function lyrShift(){ return cur >= 0 && songs[cur] ? (lyrOff[songs[cur].file] || 0) : 0; }
+function lyrShiftText(){ var o = lyrShift(); $('lyrOffTxt').textContent = o ? 'Lyrics ' + Math.abs(o).toFixed(1) + ' s ' + (o > 0 ? 'earlier' : 'later') : 'Lyrics timing'; }
+function nudgeLyrics(by){
+  if(cur < 0) return;
+  var f = songs[cur].file, o = Math.round(((lyrOff[f] || 0) + by) * 10) / 10;
+  if(o) lyrOff[f] = o; else delete lyrOff[f];
+  saveAll(); lyrShiftText(); syncLyrics(true);
+}
+$('lyrEarly').addEventListener('click', function(){ nudgeLyrics(0.5); });
+$('lyrLate').addEventListener('click', function(){ nudgeLyrics(-0.5); });
 function toggleLyrics(){ lyrOn = !lyrOn; save('lyrics', lyrOn); lyricsMode(); }
 function syncLyrics(jump){
   if(!lyr || !lyr.synced || !document.body.classList.contains('lyrics-on')) return;
-  var t = audio.currentTime + 0.2, idx = -1;
+  var t = audio.currentTime + 0.2 + lyrShift(), idx = -1;
   for(var i = 0; i < lyr.lines.length && lyr.lines[i].t <= t; i++) idx = i;
   if(idx === lyrIdx && !jump) return;
   if(lyrIdx >= 0 && lyrEls[lyrIdx]) lyrEls[lyrIdx].classList.remove('cur');
@@ -1676,11 +1954,41 @@ var THEMES = {
   cyber:   { name: 'Cyber',      accent: '#7dfcff', accent2: '#ff2fb3', bg: '#0a0a14', ink: '#f2fbff' }
 };
 var DEFAULT_UI = { theme: 'lunar', accent: '#b8c6ff', accent2: '#6054be', bg: '#0a0f26', ink: '#eef1fb',
-                   blur: 26, tint: 100, radius: 26, square: false, stars: true, moon: true, ring: true, clunk: false };
+                   blur: 26, tint: 100, radius: 26, square: false, stars: true, moon: true, ring: true, clunk: false,
+                   compact: false, lyrSize: 100, artColor: false };
 var ui = {}, vizRGB = '226,233,255', ringShown = true, saveTimer = 0, customIcon = false, iconVersion = 0;
 var MOON_FAVICON = $('favicon').getAttribute('href');
 Object.keys(DEFAULT_UI).forEach(function(k){ ui[k] = DEFAULT_UI[k]; });
 
+var artAccent = null;
+function pastel(r, g, b){             // keep the cover's hue, but make it light and soft enough to glow
+  r /= 255; g /= 255; b /= 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), h = 0, d = mx - mn, l = (mx + mn) / 2, sat = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  if(d){ h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if(h < 0) h += 360; }
+  sat = sat < 0.08 ? 0.12 : Math.min(0.95, Math.max(0.5, sat)); l = 0.8;
+  var c = (1 - Math.abs(2 * l - 1)) * sat, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, q = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return '#' + q.map(function(v){ return ('0' + Math.round((v + m) * 255).toString(16)).slice(-2); }).join('');
+}
+function artColor(i){
+  var s = songs[i];
+  if(!ui.artColor || !s || !s.icon){ if(artAccent){ artAccent = null; applyUI(); } return; }
+  var img = new Image(), want = s.file;
+  img.onload = function(){
+    if(cur < 0 || !songs[cur] || songs[cur].file !== want || !ui.artColor) return;
+    try{
+      var c = document.createElement('canvas'); c.width = c.height = 24;
+      var x = c.getContext('2d'); x.drawImage(img, 0, 0, 24, 24);
+      var d = x.getImageData(0, 0, 24, 24).data, r = 0, g = 0, b = 0, w = 0;
+      for(var k = 0; k < d.length; k += 4){
+        if(d[k + 3] < 128) continue;
+        var sat = (Math.max(d[k], d[k + 1], d[k + 2]) - Math.min(d[k], d[k + 1], d[k + 2])) / 255, wt = sat * sat + 0.02;   // colorful pixels count most
+        r += d[k] * wt; g += d[k + 1] * wt; b += d[k + 2] * wt; w += wt;
+      }
+      if(w){ artAccent = pastel(r / w, g / w, b / w); applyUI(); }
+    }catch(e){}
+  };
+  img.src = iconUrl(s);
+}
 function hexRgb(h){ return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
 function mergeUI(src){
   if(!src || typeof src !== 'object') return;
@@ -1693,8 +2001,12 @@ function mergeUI(src){
   });
 }
 function applyUI(){
-  var st = document.documentElement.style, a = hexRgb(ui.accent);
-  st.setProperty('--accent', ui.accent);
+  var accent = (ui.artColor && artAccent) || ui.accent;       // "match colors to the artwork" borrows the accent from the cover
+  var st = document.documentElement.style, a = hexRgb(accent);
+  st.setProperty('--accent', accent);
+  st.setProperty('--lyr', ui.lyrSize / 100);
+  document.body.classList.toggle('compact', ui.compact);
+  $('tCompact').checked = ui.compact; $('tArt').checked = ui.artColor; $('sLyr').value = ui.lyrSize; fill($('sLyr'));
   st.setProperty('--accent-rgb', a.join(','));
   st.setProperty('--accent2-rgb', hexRgb(ui.accent2).join(','));
   st.setProperty('--bg', ui.bg);
@@ -1724,6 +2036,7 @@ function saveAll(){
     var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; });
     blob.playlists = playlists; blob.favs = favPl.files; blob.seenVersion = PAGE_VERSION;
     blob.plays = plays; blob.recent = recentPl.files; blob.sync = syncState;
+    blob.seen = seen; blob.seenInit = seenInit; blob.lyrOff = lyrOff;
     post({ ui: blob }).catch(function(){});
   }, 350);
 }
@@ -1744,7 +2057,9 @@ Object.keys(THEMES).forEach(function(key){
 [['sBlur', 'blur'], ['sTint', 'tint'], ['sRadius', 'radius']].forEach(function(p){
   $(p[0]).addEventListener('input', function(){ ui[p[1]] = +this.value; changed(); });
 });
-[['tSquare', 'square'], ['tStars', 'stars'], ['tMoon', 'moon'], ['tRing', 'ring'], ['tClunk', 'clunk']].forEach(function(p){
+$('sLyr').addEventListener('input', function(){ ui.lyrSize = +this.value; changed(); });
+$('tArt').addEventListener('change', function(){ ui.artColor = this.checked; artAccent = null; changed(); if(cur >= 0) artColor(cur); });
+[['tSquare', 'square'], ['tStars', 'stars'], ['tMoon', 'moon'], ['tRing', 'ring'], ['tClunk', 'clunk'], ['tCompact', 'compact']].forEach(function(p){
   $(p[0]).addEventListener('change', function(){ ui[p[1]] = this.checked; changed(); });
 });
 $('resetAll').addEventListener('click', function(){ Object.keys(DEFAULT_UI).forEach(function(k){ ui[k] = DEFAULT_UI[k]; }); changed(); });
@@ -1805,7 +2120,17 @@ $('applyFolders').addEventListener('click', function(){
     });
   }).catch(function(){ hint('folderHint', 'Could not save the folders.', 'bad'); });
 });
-function openSettings(){ document.body.classList.add('settings-open'); }
+function showStats(){
+  var artists = {}, total = 0, byArtist = {}, best = '', bestN = 0;
+  songs.forEach(function(s, i){ if(s.artist) artists[groupKey(i)] = groupName(i); var n = plays[s.file] || 0; total += n;
+    if(n){ if(s.artist){ var k = groupKey(i); byArtist[k] = (byArtist[k] || 0) + n; } if(n > bestN){ bestN = n; best = s.title; } } });
+  var topA = '', topAN = 0; Object.keys(byArtist).forEach(function(k){ if(byArtist[k] > topAN){ topAN = byArtist[k]; topA = artists[k]; } });
+  var box = $('stats'); box.innerHTML = '';
+  [['Songs', songs.length], ['Artists', Object.keys(artists).length], ['Playlists', playlists.length], ['Favorites', favPl.files.filter(function(f){ return indexOfFile(f) >= 0; }).length],
+   ['Songs played', total], ['Most played song', best ? best + ' (' + bestN + ')' : 'Nothing yet'], ['Most played artist', topA ? topA + ' (' + topAN + ')' : 'Nothing yet']
+  ].forEach(function(r){ var d = el('div', 'kv'); d.appendChild(el('span', null, r[0])); d.appendChild(el('b', null, String(r[1]))); box.appendChild(d); });
+}
+function openSettings(){ showStats(); document.body.classList.add('settings-open'); }
 function closeSettings(){ document.body.classList.remove('settings-open'); }
 $('openSet').addEventListener('click', openSettings);
 $('closeSet').addEventListener('click', closeSettings);
@@ -1842,6 +2167,8 @@ function loadSync(src){
   ['clientId', 'clientSecret', 'refresh'].forEach(function(k){ if(typeof src[k] === 'string') syncState[k] = src[k]; });
   if(!NATIVE && (src.role === 'upload' || src.role === 'download')) syncState.role = src.role;
   if(typeof src.last === 'number') syncState.last = src.last;
+  if(typeof src.listsSeen === 'number') syncState.listsSeen = src.listsSeen;
+  if(typeof src.listsSig === 'string') syncState.listsSig = src.listsSig;
   if(src.got && typeof src.got === 'object') SYNC_ROOTS.forEach(function(r){
     var g = src.got[r[0]]; if(g && typeof g === 'object') syncState.got[r[0]] = g;
   });
@@ -1928,11 +2255,11 @@ function accessToken(force){
 }
 
 /* --- Google Drive --- */
-function drive(method, path, body, retried){
+function drive(method, path, body, retried, raw){      // raw: { type, text } sends text as it is instead of JSON
   return accessToken(false).then(function(tok){
-    return host('http', { url: GOOGLE.api + path, method: method, headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '' });
+    return host('http', { url: GOOGLE.api + path, method: method, headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': raw ? raw.type : 'application/json' }, body: raw ? raw.text : body ? JSON.stringify(body) : '' });
   }).then(parse).then(function(r){
-    if(r.status === 401 && !retried) return accessToken(true).then(function(){ return drive(method, path, body, true); });
+    if(r.status === 401 && !retried) return accessToken(true).then(function(){ return drive(method, path, body, true, raw); });
     if(r.status >= 400) throw new Error('Google Drive said ' + r.status + (r.json.error && r.json.error.message ? ': ' + r.json.error.message : ''));
     return r;
   });
@@ -1971,6 +2298,72 @@ function getFile(root, name, id){
   }).then(function(r){ if(r.status !== 200) throw new Error('download stopped with ' + r.status); });
 }
 
+/* --- playlists and favorites travel too ---
+   They are kept in one small file, library.json, next to the music folders in Drive. Songs are
+   named by file name only, because the same song sits under a different path on each device.
+   Whichever device changed its lists last wins; if both changed, or a device joins for the first
+   time, the two sets are combined so nothing is lost. */
+function baseOf(f){ return String(f).split(/[\\/]/).pop(); }
+function exportLists(){
+  return { v: 1, updated: Date.now(), favs: favPl.files.map(baseOf), playlists: playlists.map(function(p){ return { name: p.name, files: p.files.map(baseOf) }; }) };
+}
+function listsSig(){ var e = exportLists(); return JSON.stringify([e.favs, e.playlists]); }
+function normalizeLists(){             // swap bare file names for this device's real paths once the songs exist here
+  if(!songs.length) return;
+  function fix(files){ for(var i = 0; i < files.length; i++){ if(indexOfFile(files[i]) < 0){ var r = resolveFile(files[i]); if(r && files.indexOf(r) < 0) files[i] = r; } } }
+  fix(favPl.files); playlists.forEach(function(p){ fix(p.files); }); updateFav();
+}
+function uniq(list){ var out = []; list.forEach(function(f){ if(typeof f === 'string' && out.indexOf(f) < 0) out.push(f); }); return out; }
+function adoptLists(data){
+  favPl.files = uniq(Array.isArray(data.favs) ? data.favs : []);
+  var old = playlists;
+  playlists = (Array.isArray(data.playlists) ? data.playlists : []).filter(function(p){ return p && typeof p.name === 'string'; }).map(function(src){
+    var same = null; old.forEach(function(p){ if(p.name.toLowerCase() === src.name.toLowerCase()) same = p; });
+    return { id: same ? same.id : 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36), name: src.name, files: uniq(Array.isArray(src.files) ? src.files : []) };
+  });
+  normalizeLists(); saveAll(); updateFav();
+  if(ctxDesc.type === 'playlist') buildQueue();
+  if(view === 'playlists') renderList();
+}
+function mergeLists(remote){
+  var mine = exportLists(), out = { favs: uniq((remote.favs || []).concat(mine.favs)), playlists: [] };
+  (remote.playlists || []).forEach(function(p){ if(p && typeof p.name === 'string') out.playlists.push({ name: p.name, files: uniq(p.files || []) }); });
+  mine.playlists.forEach(function(p){
+    var same = null; out.playlists.forEach(function(x){ if(x.name.toLowerCase() === p.name.toLowerCase()) same = x; });
+    if(same) same.files = uniq(same.files.concat(p.files)); else out.playlists.push(p);
+  });
+  return out;
+}
+function putLists(top, id, data){
+  var text = JSON.stringify(data), sent;
+  if(id) sent = drive('PATCH', '/upload/drive/v3/files/' + id + '?uploadType=media', null, false, { type: 'application/json', text: text });
+  else {
+    var b = 'lunar' + Date.now();
+    sent = drive('POST', '/upload/drive/v3/files?uploadType=multipart', null, false, { type: 'multipart/related; boundary=' + b,
+      text: '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: 'library.json', parents: [top] }) +
+            '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + text + '\r\n--' + b + '--' });
+  }
+  return sent.then(function(){ syncState.listsSeen = data.updated; syncState.listsSig = listsSig(); saveAll(); });
+}
+function syncLists(top){
+  var q = "name='library.json' and trashed=false and '" + top + "' in parents";
+  return drive('GET', '/drive/v3/files?fields=' + encodeURIComponent('files(id,name)') + '&q=' + encodeURIComponent(q)).then(function(r){
+    var id = r.json.files && r.json.files.length ? r.json.files[0].id : '';
+    if(!id) return putLists(top, '', exportLists());
+    return drive('GET', '/drive/v3/files/' + id + '?alt=media').then(function(g){
+      var remote = g.json && g.json.v === 1 ? g.json : null;
+      if(!remote) return putLists(top, id, exportLists());
+      var first = !syncState.listsSig && !syncState.listsSeen, localChanged = listsSig() !== syncState.listsSig, remoteChanged = remote.updated !== syncState.listsSeen;
+      var empty = !favPl.files.length && !playlists.length;
+      if((first && empty) || (remoteChanged && !localChanged && !first)){
+        adoptLists(remote); syncState.listsSeen = remote.updated; syncState.listsSig = listsSig(); saveAll(); return;
+      }
+      if(first || (remoteChanged && localChanged)){ adoptLists(mergeLists(remote)); return putLists(top, id, exportLists()); }
+      if(localChanged) return putLists(top, id, exportLists());
+    });
+  });
+}
+
 /* --- the sync itself --- */
 function runSync(manual){
   if(!HOST_OK || !syncState.refresh || !syncState.role || syncBusy) return Promise.resolve();
@@ -1993,8 +2386,10 @@ function runSync(manual){
     function step(){ if(i >= list.length) return Promise.resolve(); return fn(list[i++], i).then(step); }
     return step();
   }
+  var topId = '';
   return host('files').then(function(l){ local = l; return folderId('Lunar Music', ''); }).then(function(top){
     if(!top) throw new Error('nothing has been sent to Google Drive yet. Sync from your PC first');
+    topId = top;
     return each(SYNC_ROOTS, function(pair){
       var root = pair[0], here = {}, info = local[root] || { found: false, files: [] };
       info.files.forEach(function(f){ here[f.file] = f.size; });
@@ -2029,6 +2424,8 @@ function runSync(manual){
       else p = host('delete', { root: j.root, file: j.name }).then(function(){ removed++; delete syncState.got[j.root][j.name]; });
       return p.catch(function(){ failed++; });
     });
+  }).then(function(){
+    return syncLists(topId).catch(function(){ failed++; });
   }).then(function(){
     syncBusy = false; syncState.last = Date.now(); saveAll(); syncUI();
     if(failed) syncSay((sending ? 'Sent ' : 'Got ') + added + ', removed ' + removed + ', but ' + failed + ' did not go through. They will be tried again next time.', 'bad');
@@ -2181,7 +2578,7 @@ fill($('seek'));
 sizeStars(); drawStars(0);
 requestAnimationFrame(frame);
 applyUI(); showAbout();
-fetch('/api/settings').then(function(r){ return r.json(); }).then(function(s){ mergeUI(s.ui); loadPlaylists(s.ui); applyUI(); gotSettings(s); }).catch(function(){});
+fetch('/api/settings').then(function(r){ return r.json(); }).then(function(s){ mergeUI(s.ui); loadPlaylists(s.ui); settingsLoaded = true; normalizeLists(); noteSeen(); applyUI(); gotSettings(s); }).catch(function(){});
 fetchLibrary(false);
 /* Tells the engine the window is still open. On Windows the reply also says which version of this
    page is newest; if that is not this one, reload into it once the music is stopped. */
