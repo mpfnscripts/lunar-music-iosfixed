@@ -258,6 +258,21 @@ body.playing .btn.play .ipause{display:block}
   background:color-mix(in srgb,var(--bg) 80%,rgb(var(--accent-rgb)));box-shadow:0 12px 30px -8px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* ---------- 1.9 extras ---------- */
+.upnext{margin-top:3px;font-size:12px;color:var(--ink-faint);min-height:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.qclear{width:22px;height:22px;border-radius:50%;border:0;background:rgba(var(--accent-rgb),.2);color:var(--ink);cursor:pointer;flex:none;display:grid;place-items:center;padding:0}
+.qclear[hidden]{display:none}
+.qclear svg{width:10px;height:10px;fill:currentColor;stroke:none}
+.pill.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.18)}
+.wrap{flex-wrap:wrap}
+.backup{display:block;width:100%;height:auto;min-height:74px;margin-top:8px;padding:8px 12px;resize:vertical;line-height:1.4}
+.more{padding:10px;text-align:center;font-size:12.5px;color:var(--ink-faint)}
+body.clunk .upnext{color:#333;font-size:11px}
+body.clunk .qclear{background:#d9d9d9;border:1px outset #fff;color:#000;width:16px;height:16px}
+body.clunk .pill.on{border-style:inset;background:#c3c3c3;box-shadow:none}
+body.clunk .more{color:#333;font-size:11px}
+body.native .tabs button{font-size:12px;letter-spacing:.03em}
+
 /* ---------- lyrics ---------- */
 .lyrbtn{position:absolute;top:16px;right:16px;z-index:2;height:32px;padding:0 14px 0 11px;border-radius:16px;border:1px solid var(--line);cursor:pointer;
   display:flex;align-items:center;gap:7px;color:var(--ink-soft);font:inherit;font-size:12.5px;letter-spacing:.08em;
@@ -505,6 +520,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
         <label class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
           <input id="q" type="search" placeholder="Search your songs" autocomplete="off" spellcheck="false">
+          <button type="button" class="qclear" id="qClear" hidden title="Clear search" aria-label="Clear search"><svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg></button>
         </label>
         <button class="btn small" id="refresh" title="Rescan music folder" aria-label="Rescan music folder">
       <svg viewBox="0 0 24 24"><path d="M12 5V2L7.5 6 12 10V7a5 5 0 1 1-4.9 6H5.07A7 7 0 1 0 12 5z"/></svg>
@@ -514,6 +530,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
         <button type="button" data-tab="songs">Songs</button>
         <button type="button" data-tab="artists">Artists</button>
         <button type="button" data-tab="playlists">Playlists</button>
+        <button type="button" data-tab="queue">Queue</button>
       </div>
       <div class="list" id="list"></div>
     </section>
@@ -532,6 +549,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
       </div>
       <div class="title" id="title" title="Show this song in the list">Lunar Music</div>
       <div class="artist" id="artist">Pick a song to begin</div>
+      <div class="upnext" id="upNext"></div>
 
       <div class="seek">
         <span class="time" id="cur">0:00</span>
@@ -631,6 +649,21 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <div class="hint" id="folderHint"></div>
     </div>
 
+    <div class="desk-only">
+      <h3>Sleep timer</h3>
+      <div class="pathrow wrap" id="sleepRow">
+        <button class="pill" data-sleep="0">Off</button><button class="pill" data-sleep="15">15 min</button><button class="pill" data-sleep="30">30 min</button>
+        <button class="pill" data-sleep="60">60 min</button><button class="pill" data-sleep="end">End of song</button>
+      </div>
+      <div class="hint" id="sleepHint"></div>
+    </div>
+
+    <h3>Move playlists between devices</h3>
+    <div class="hint" style="margin-top:0">Copy this text on one device and paste it into Lunar Music on the other to bring your playlists and favorites across.</div>
+    <textarea class="path backup" id="backupText" rows="3" spellcheck="false" autocomplete="off" placeholder="Backup text appears here, or paste one in"></textarea>
+    <div class="pathrow wrap" style="margin-top:8px"><button class="pill" id="backupMake">Copy my playlists</button><button class="pill" id="backupLoad">Restore from text</button></div>
+    <div class="hint" id="backupHint"></div>
+
     <h3>Update log</h3>
     <div class="about" id="about"></div>
 
@@ -686,8 +719,9 @@ function fetchLibrary(keep){
     var playingFile = cur >= 0 ? songs[cur].file : null;
     lyrCache = {};
     songs = lib.songs || [];
-    fileIdx = {}; libInfo = lib;
-    songs.forEach(function(s, i){ var d = describe(s); s.title = d.title; s.artist = d.artist; s.hay = (s.name + ' ' + s.folder).toLowerCase(); fileIdx[s.file] = i; });
+    fileIdx = {}; baseIdx = {}; libInfo = lib;
+    songs.forEach(function(s, i){ var d = describe(s); s.title = d.title; s.artist = d.artist; s.hay = (s.name + ' ' + s.folder).toLowerCase(); fileIdx[s.file] = i;
+      var base = s.file.split(/[\\/]/).pop().toLowerCase(); if(!(base in baseIdx)) baseIdx[base] = i; });
     renderList();
     cur = -1;
     if(keep && playingFile){ cur = indexOfFile(playingFile); }
@@ -730,14 +764,18 @@ function empty(head, body, code){
 }
 /* ---------- library views: Songs, Artists, Playlists ---------- */
 var view = load('tab', 'artists'), openPl = null, libInfo = { songsFound: true, songsPath: '' }, heads = [];
-var playlists = [], ctxDesc = { type: 'all' }, fileIdx = {}, UNKNOWN = 'Unknown artist';
+var playlists = [], ctxDesc = { type: 'all' }, fileIdx = {}, baseIdx = {}, UNKNOWN = 'Unknown artist';
 var ICON = {
   plus: '<svg viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></svg>',
   cross: '<svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg>',
   play: '<svg viewBox="0 0 24 24"><path d="M8 4.5v15l12-7.5z"/></svg>',
   back: '<svg viewBox="0 0 24 24"><path d="M14.6 4.6 16 6l-6 6 6 6-1.4 1.4L7.2 12z"/></svg>',
   list: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg>',
-  heart: '<svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg>'
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M12 6.5 19.4 14 18 15.4l-6-6-6 6L4.6 14z"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M12 17.5 4.6 10 6 8.6l6 6 6-6L19.4 10z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm-1 2.5v5l4.2 2.5 1-1.7-3.2-1.9V7.5z"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.2 6L12 16.7 6.5 19.6l1.2-6L3.2 9.4l6.1-.8z"/></svg>'
 };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
 function iconBtn(cls, svg, title, fn){
@@ -752,7 +790,7 @@ function groupKey(i){ return groupName(i).trim().toLowerCase(); }
 function byTitle(a, b){ return songs[a].title.localeCompare(songs[b].title, undefined, { sensitivity: 'base' }) || a - b; }
 function allIdx(){ return songs.map(function(_, i){ return i; }); }
 var favPl = { id: '__favs', name: 'Favorites', files: [], fixed: true };   // a built-in playlist that cannot be renamed or deleted
-function plById(id){ if(id === favPl.id) return favPl; for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
+function plById(id){ if(id === favPl.id) return favPl; if(id === recentPl.id) return recentPl; if(id === topPl.id){ topPl.files = topFiles(); return topPl; } for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
 function isFav(file){ return favPl.files.indexOf(file) >= 0; }
 function updateFav(){
   var b = $('favBtn'), on = cur >= 0 && songs[cur] && isFav(songs[cur].file);
@@ -783,22 +821,32 @@ function listFor(d){
 function playFrom(desc, i){ ctxDesc = desc; cur = i; buildQueue(); select(i, true); }
 function playAll(desc){ ctxDesc = desc; cur = -1; buildQueue(); if(queue.length) select(queue[0], true); }
 
+/* One song in a list. opts: hideArtist, sub (text under the title), onPick (instead of playing
+   from this view), buttons (instead of the + button). */
 function songRow(i, desc, opts){
+  opts = opts || {};
   var s = songs[i], r = el('div', 'row'); r.tabIndex = 0;
   var th;
   if(s.icon){ th = document.createElement('img'); th.loading = 'lazy'; th.alt = ''; th.src = iconUrl(s); }
   else th = document.createElement('div');
   th.className = 'thumb';
   var m = el('div', 'meta'); m.appendChild(el('div', 't', s.title));
-  if(s.artist && !(opts && opts.hideArtist)) m.appendChild(el('div', 'a', s.artist));
+  var sub = opts.sub != null ? opts.sub : (opts.hideArtist ? '' : s.artist);
+  if(sub) m.appendChild(el('div', 'a', sub));
   var eq = el('div', 'eq'); eq.innerHTML = '<i></i><i></i><i></i>';
   r.appendChild(th); r.appendChild(m); r.appendChild(eq);
-  if(opts && opts.removeFrom) r.appendChild(iconBtn('rowbtn', ICON.cross, 'Remove from playlist', function(){ removeFromPlaylist(opts.removeFrom, s.file); }));
-  else r.appendChild(iconBtn('rowbtn', ICON.plus, 'Add to playlist', function(b){ openMenu(i, b); }));
-  r.addEventListener('click', function(){ playFrom(desc, i); });
-  r.addEventListener('keydown', function(e){ if(e.key === 'Enter') playFrom(desc, i); });
+  (opts.buttons || [{ icon: ICON.plus, title: 'Add to playlist or play next', fn: function(b){ openMenu(i, b); } }]).forEach(function(d){
+    r.appendChild(iconBtn('rowbtn', d.icon, d.title, d.fn));
+  });
+  var pick = opts.onPick || function(){ playFrom(desc, i); };
+  r.addEventListener('click', pick);
+  r.addEventListener('keydown', function(e){ if(e.key === 'Enter') pick(); });
   rows[i] = r;
   return r;
+}
+function sectionHead(name, count){
+  var h = el('div', 'ghead'); h.appendChild(el('span', 'gname', name)); h.appendChild(el('span', 'gcount', count || ''));
+  return h;
 }
 
 function renderList(){
@@ -806,7 +854,7 @@ function renderList(){
   listEl.innerHTML = ''; rows = []; heads = [];
   Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function(b){ b.classList.toggle('on', b.dataset.tab === view); });
   $('count').textContent = songs.length ? plural(songs.length) : '';
-  $('q').placeholder = view === 'playlists' && !openPl ? 'Search your playlists' : 'Search your songs';
+  $('q').placeholder = view === 'playlists' && !openPl ? 'Search your playlists' : view === 'queue' ? 'Search the queue' : 'Search your songs';
   if(!songs.length){
     if(libInfo.songsFound) empty('No songs yet', 'Drop .mp3 files into this folder, then press the refresh button:', libInfo.songsPath);
     else empty('Music folder not found', 'Lunar Music looks for your songs here. Check the drive is plugged in:', libInfo.songsPath);
@@ -814,7 +862,8 @@ function renderList(){
   }
   var frag = document.createDocumentFragment();
   if(view === 'playlists' && openPl && !plById(openPl)) openPl = null;
-  if(view === 'playlists' && openPl) renderPlaylist(frag, plById(openPl));
+  if(view === 'queue') renderQueue(frag);
+  else if(view === 'playlists' && openPl) renderPlaylist(frag, plById(openPl));
   else if(view === 'playlists') renderPlaylists(frag);
   else if(view === 'artists'){
     var last = null, head = null;
@@ -824,6 +873,7 @@ function renderList(){
         last = k;
         var h = el('div', 'ghead'), cnt = el('span', 'gcount');
         h.appendChild(el('span', 'gname', groupName(i))); h.appendChild(cnt);
+        h.appendChild(iconBtn('rowbtn', ICON.plus, 'Add all of ' + groupName(i) + ' to a playlist', function(b){ openMenu(listFor({ type: 'artist', key: k }), b); }));
         h.appendChild(iconBtn('rowbtn', ICON.play, 'Play ' + groupName(i), function(){ playAll({ type: 'artist', key: k }); }));
         head = { el: h, cnt: cnt, rows: [] }; heads.push(head); frag.appendChild(h);
       }
@@ -845,10 +895,12 @@ function renderPlaylists(frag){
   add.addEventListener('click', make);
   add.addEventListener('keydown', function(e){ if(e.key === 'Enter') make(); });
   frag.appendChild(add);
-  [favPl].concat(playlists).forEach(function(p){
-    var list = listFor({ type: 'playlist', id: p.id }), r = el('div', 'row plrow'); r.tabIndex = 0; r.dataset.name = p.name.toLowerCase();
+  [favPl, recentPl, topPl].concat(playlists).forEach(function(p){
+    var list = listFor({ type: 'playlist', id: p.id });
+    if(p.auto && !list.length) return;                // the automatic lists appear once they have something in them
+    var r = el('div', 'row plrow'); r.tabIndex = 0; r.dataset.name = p.name.toLowerCase();
     var t, first = list.length ? songs[list[0]] : null;
-    if(p.fixed){ t = document.createElement('div'); t.innerHTML = ICON.heart; t.style.background = 'rgba(var(--accent-rgb),.16)'; t.firstChild.style.cssText = 'width:20px;height:20px;fill:var(--ink)'; }
+    if(p.fixed){ t = document.createElement('div'); t.innerHTML = p === recentPl ? ICON.clock : p === topPl ? ICON.star : ICON.heart; t.style.background = 'rgba(var(--accent-rgb),.16)'; t.firstChild.style.cssText = 'width:20px;height:20px;fill:var(--ink)'; }
     else if(first && first.icon){ t = document.createElement('img'); t.loading = 'lazy'; t.alt = ''; t.src = iconUrl(first); }
     else t = document.createElement('div');
     t.className = 'thumb';
@@ -882,15 +934,97 @@ function renderPlaylist(frag, p){
   });
   if(!p.fixed) head.appendChild(del);
   frag.appendChild(head);
-  list.forEach(function(i){ frag.appendChild(songRow(i, desc, { removeFrom: p.id })); });
+  list.forEach(function(i){
+    var f = songs[i].file;
+    if(p.auto){ frag.appendChild(songRow(i, desc, p === topPl ? { sub: (plays[f] || 0) + (plays[f] === 1 ? ' play' : ' plays') + (songs[i].artist ? '  \u00b7  ' + songs[i].artist : '') } : null)); return; }
+    frag.appendChild(songRow(i, desc, { buttons: [
+      { icon: ICON.up, title: 'Move up', fn: function(){ movePl(p, f, -1); } },
+      { icon: ICON.down, title: 'Move down', fn: function(){ movePl(p, f, 1); } },
+      { icon: ICON.cross, title: 'Remove from playlist', fn: function(){ removeFromPlaylist(p.id, f); } }
+    ] }));
+  });
   if(!list.length){
     var hint = el('div', 'empty'); hint.appendChild(el('strong', null, 'This playlist is empty'));
-    hint.appendChild(document.createTextNode(p.fixed ? 'Press the heart on the player to add the song that is playing.' : 'Go to Songs or Artists and press + on a song to add it.'));
+    hint.appendChild(document.createTextNode(p.auto ? 'Songs you play will show up here.' : p.fixed ? 'Press the heart on the player to add the song that is playing.' : 'Go to Songs or Artists and press + on a song to add it.'));
     frag.appendChild(hint);
   }
 }
 
+/* ---------- queue view ---------- */
+function renderQueue(frag){
+  var at = queue.indexOf(cur);
+  if(cur < 0 || at < 0){
+    var hint = el('div', 'empty'); hint.appendChild(el('strong', null, 'Nothing is queued'));
+    hint.appendChild(document.createTextNode('Play a song, and what comes after it shows up here.'));
+    frag.appendChild(hint); return;
+  }
+  frag.appendChild(sectionHead('Now playing'));
+  frag.appendChild(songRow(cur, null, { onPick: toggle, buttons: [] }));
+  var rest = queue.slice(at + 1), shown = rest.slice(0, 150);
+  frag.appendChild(sectionHead('Up next', rest.length ? plural(rest.length) : ''));
+  shown.forEach(function(i){
+    frag.appendChild(songRow(i, null, { onPick: function(){ select(i, true); },
+      buttons: [{ icon: ICON.cross, title: 'Remove from queue', fn: function(){ dequeue(i); } }] }));
+  });
+  if(rest.length > shown.length) frag.appendChild(el('div', 'more', 'and ' + (rest.length - shown.length) + ' more'));
+  if(!rest.length) frag.appendChild(el('div', 'more', repeat === 'all' ? 'Then it starts over.' : 'That is the end of the queue.'));
+}
+function dequeue(i){
+  var at = queue.indexOf(i);
+  if(at < 0 || i === cur) return;
+  queue.splice(at, 1); qpos = queue.indexOf(cur);
+  sendQueue(); queueChanged();
+}
+function nextIndex(){
+  if(cur < 0 || !queue.length) return -1;
+  if(repeat === 'one') return cur;
+  var at = queue.indexOf(cur);
+  if(at < queue.length - 1) return queue[at + 1];
+  return repeat === 'all' ? queue[0] : -1;
+}
+function updateNext(){
+  var n = nextIndex(), text = '';
+  if(cur >= 0) text = n < 0 ? 'Last song in the queue' : n === cur && repeat === 'one' ? 'Repeating this song' : 'Next: ' + songs[n].title;
+  $('upNext').textContent = text;
+}
+/* Called whenever the queue or the playing song changes. */
+function queueChanged(){
+  updateNext();
+  if(view === 'queue'){ var top = listEl.scrollTop; renderList(); listEl.scrollTop = top; }
+}
+
+/* ---------- play counts: Recently played and Most played ---------- */
+var plays = {}, counted = null;
+var recentPl = { id: '__recent', name: 'Recently played', files: [], fixed: true, auto: true };
+var topPl = { id: '__top', name: 'Most played', files: [], fixed: true, auto: true };
+function topFiles(){
+  return Object.keys(plays).filter(function(f){ return indexOfFile(f) >= 0 && plays[f] > 0; })
+    .sort(function(a, b){ return plays[b] - plays[a] || a.localeCompare(b); }).slice(0, 25);
+}
+function notePlay(file){       // a song counts as played once it has run for a few seconds
+  counted = file;
+  plays[file] = (plays[file] || 0) + 1;
+  var k = recentPl.files.indexOf(file); if(k >= 0) recentPl.files.splice(k, 1);
+  recentPl.files.unshift(file); recentPl.files.length = Math.min(recentPl.files.length, 50);
+  saveAll();
+  if(view === 'playlists' && (!openPl || openPl === recentPl.id || openPl === topPl.id)){ var top = listEl.scrollTop; renderList(); listEl.scrollTop = top; }
+}
+
 /* ---------- playlists: data ---------- */
+function movePl(p, file, dir){
+  var vis = listFor({ type: 'playlist', id: p.id }).map(function(i){ return songs[i].file; });
+  var k = vis.indexOf(file), other = vis[k + dir];
+  if(k < 0 || !other) return;
+  var a = p.files.indexOf(file), b = p.files.indexOf(other);
+  p.files[a] = other; p.files[b] = file;
+  saveAll(); playlistChanged(p);
+}
+function addMany(p, files){
+  var n = 0;
+  files.forEach(function(f){ if(p.files.indexOf(f) < 0){ p.files.push(f); n++; } });
+  saveAll(); playlistChanged(p); updateFav();
+  toast(n ? 'Added ' + plural(n) + ' to ' + p.name : 'Already in ' + p.name);
+}
 function newPlaylist(){
   var n = playlists.length + 1, name;
   do { name = 'Playlist ' + n++; } while(playlists.some(function(p){ return p.name === name; }));
@@ -916,6 +1050,18 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '1.9', when: 'Nov 12', notes: [
+    'Queue tab: see what is coming up, jump to a song, or remove one',
+    'The player shows which song is next',
+    'Recently played: an automatic playlist of your last 50 songs',
+    'Most played: an automatic playlist of the songs you play the most',
+    'Reorder the songs in a playlist with the up and down arrows',
+    'Add a whole artist to a playlist with the + beside their name',
+    'Move playlists and favorites between your PC and iPhone (Settings)',
+    'Sleep timer in Settings (Windows)',
+    'Quick Clunk Mode: tap the logo three times, or press K',
+    'Search has a clear button and says when nothing matches'
+  ] },
   { v: '1.8', when: 'Nov 12', notes: [
     'The app now restarts itself as soon as an update is found, then carries on with your song',
     'This update log, in Settings and after each update',
@@ -959,6 +1105,10 @@ $('newsOk').addEventListener('click', closeNews);
 $('news').addEventListener('click', function(e){ if(e.target === $('news')) closeNews(); });
 function loadPlaylists(blob){
   if(blob && Array.isArray(blob.favs)){ favPl.files = blob.favs.filter(function(f){ return typeof f === 'string'; }); updateFav(); }
+  if(blob && Array.isArray(blob.recent)) recentPl.files = blob.recent.filter(function(f){ return typeof f === 'string'; }).slice(0, 50);
+  if(blob && blob.plays && typeof blob.plays === 'object'){
+    plays = {}; Object.keys(blob.plays).forEach(function(f){ var n = blob.plays[f]; if(typeof n === 'number' && n > 0) plays[f] = Math.floor(n); });
+  }
   if(blob && blob.seenVersion !== PAGE_VERSION){ showNews(blob.seenVersion); saveAll(); }   // only for people who already had settings saved
   if(!blob) saveAll();    // first run: just note which version this is, so later updates can say what changed
   var src = blob && blob.playlists;
@@ -971,21 +1121,29 @@ function loadPlaylists(blob){
 /* ---------- "add to playlist" menu and toast ---------- */
 var menuEl = null;
 function closeMenu(){ if(menuEl){ menuEl.remove(); menuEl = null; } }
-function openMenu(i, anchor){
+function openMenu(target, anchor){
   closeMenu();
-  var file = songs[i].file, m = el('div', 'menu');
-  var pn = el('button'); pn.type = 'button'; pn.appendChild(el('i', null, '\u25B8')); pn.appendChild(el('span', null, 'Play next'));
-  pn.addEventListener('click', function(){ closeMenu(); playNext(i); });
-  m.appendChild(pn);
-  m.appendChild(el('div', 'mh', 'Add to playlist'));
+  var many = Array.isArray(target), idxs = many ? target : [target], files = idxs.map(function(i){ return songs[i].file; });
+  var file = files[0], m = el('div', 'menu');
+  if(!many){
+    var pn = el('button'); pn.type = 'button'; pn.appendChild(el('i', null, '▸')); pn.appendChild(el('span', null, 'Play next'));
+    pn.addEventListener('click', function(){ closeMenu(); playNext(idxs[0]); });
+    m.appendChild(pn);
+  }
+  m.appendChild(el('div', 'mh', many ? 'Add ' + plural(files.length) + ' to playlist' : 'Add to playlist'));
   [favPl].concat(playlists).forEach(function(p){
-    var b = el('button'); b.type = 'button';
-    b.appendChild(el('i', null, p.files.indexOf(file) >= 0 ? '✓' : '')); b.appendChild(el('span', null, p.name));
-    b.addEventListener('click', function(){ closeMenu(); if(p.files.indexOf(file) >= 0) { removeFromPlaylist(p.id, file); toast('Removed from ' + p.name); } else addToPlaylist(p, file); });
+    var b = el('button'), has = !many && p.files.indexOf(file) >= 0; b.type = 'button';
+    b.appendChild(el('i', null, has ? '✓' : '')); b.appendChild(el('span', null, p.name));
+    b.addEventListener('click', function(){
+      closeMenu();
+      if(many) addMany(p, files);
+      else if(has){ removeFromPlaylist(p.id, file); toast('Removed from ' + p.name); }
+      else addToPlaylist(p, file);
+    });
     m.appendChild(b);
   });
   var nb = el('button'); nb.type = 'button'; nb.appendChild(el('i', null, '+')); nb.appendChild(el('span', null, 'New playlist'));
-  nb.addEventListener('click', function(){ closeMenu(); addToPlaylist(newPlaylist(), file); });
+  nb.addEventListener('click', function(){ closeMenu(); if(many) addMany(newPlaylist(), files); else addToPlaylist(newPlaylist(), file); });
   m.appendChild(nb);
   document.body.appendChild(m); menuEl = m;
   var r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
@@ -1007,10 +1165,18 @@ Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function
 
 function filter(){
   var q = $('q').value.trim().toLowerCase();
+  $('qClear').hidden = !$('q').value;
   rows.forEach(function(r, i){ r.hidden = !!q && songs[i].hay.indexOf(q) < 0; });
   heads.forEach(function(h){ h.el.hidden = h.rows.every(function(r){ return r.hidden; }); });
   Array.prototype.forEach.call(listEl.querySelectorAll('.plrow[data-name]'), function(r){ r.hidden = !!q && r.dataset.name.indexOf(q) < 0; });
+  var old = listEl.querySelector('.nomatch'); if(old) old.remove();
+  if(q && !listEl.querySelector('.row:not([hidden])')){
+    var none = el('div', 'empty nomatch'); none.appendChild(el('strong', null, 'Nothing found'));
+    none.appendChild(document.createTextNode('No match for "' + $('q').value.trim() + '" here.'));
+    listEl.appendChild(none);
+  }
 }
+$('qClear').addEventListener('click', function(e){ e.preventDefault(); $('q').value = ''; filter(); $('q').focus(); });
 function mark(){
   rows.forEach(function(r, i){ r.classList.toggle('on', i === cur); });
 }
@@ -1025,7 +1191,7 @@ function buildQueue(){
     if(at > 0){ queue.splice(at, 1); queue.unshift(cur); }
   }
   qpos = cur >= 0 ? queue.indexOf(cur) : -1;
-  sendQueue();
+  sendQueue(); queueChanged();
 }
 function sendQueue(){
   if(NATIVE) send({ cmd: 'queue', files: queue.map(function(i){ return songs[i].file; }), pos: qpos, repeat: repeat });
@@ -1038,7 +1204,7 @@ function playNext(i){
   if(at >= 0) queue.splice(at, 1);
   qpos = queue.indexOf(cur);
   queue.splice(qpos + 1, 0, i);
-  sendQueue();
+  sendQueue(); queueChanged();
   toast(songs[i].title + ' will play next');
 }
 /* Find the playing song in the list. */
@@ -1069,7 +1235,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
-  showLyricsFor(i); clunkStatus(); updateFav();
+  showLyricsFor(i); clunkStatus(); updateFav(); counted = null; queueChanged();
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -1101,6 +1267,7 @@ audio.addEventListener('play', function(){ document.body.classList.add('playing'
 audio.addEventListener('pause', function(){ document.body.classList.remove('playing'); clunkStatus(); });
 audio.addEventListener('playing', function(){ failures = 0; });
 audio.addEventListener('ended', function(){
+  if(sleepEnd){ setSleep('0'); toast('Sleep timer: stopped after this song'); return; }
   if(repeat === 'one'){ audio.currentTime = 0; play(); } else next(true);
 });
 audio.addEventListener('error', function(){
@@ -1126,6 +1293,7 @@ audio.addEventListener('timeupdate', function(){
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
   $('cur').textContent = fmt(audio.currentTime);
   if(Date.now() - posSaved > 5000){ posSaved = Date.now(); savePos(); }
+  if(cur >= 0 && counted !== songs[cur].file && !audio.paused && audio.currentTime > 5) notePlay(songs[cur].file);
   syncLyrics(false);
 });
 
@@ -1153,6 +1321,7 @@ function setRepeat(mode){
   b.classList.toggle('active', mode !== 'off'); b.classList.toggle('one-on', mode === 'one');
   b.title = 'Repeat: ' + mode + ' (R)'; save('repeat', mode);
   if(NATIVE) send({ cmd: 'repeat', mode: mode });
+  queueChanged();
 }
 function cycleRepeat(){ setRepeat(repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off'); }
 
@@ -1168,6 +1337,7 @@ document.addEventListener('keydown', function(e){
   var tag = e.target.tagName;
   if(!$('news').hidden){ if(e.key === 'Escape' || e.key === 'Enter') closeNews(); return; }
   if(e.key === 'Escape' && menuEl){ closeMenu(); return; }
+  if(e.target.tagName === 'TEXTAREA') return;
   if(e.key === 'Escape' && document.body.classList.contains('settings-open')){ closeSettings(); return; }
   if(tag === 'INPUT' && (e.target.type === 'text' || e.target.classList.contains('path'))) return;
   if(tag === 'INPUT' && e.target.type === 'search'){ if(e.key === 'Escape'){ e.target.value = ''; filter(); e.target.blur(); } return; }
@@ -1185,6 +1355,7 @@ document.addEventListener('keydown', function(e){
   else if(k === 'r' || k === 'R') cycleRepeat();
   else if(k === 'l' || k === 'L'){ if(lyr) toggleLyrics(); }
   else if(k === 'f' || k === 'F') toggleFav();
+  else if(k === 'k' || k === 'K') quickClunk();
   else if(k === '/'){ e.preventDefault(); $('q').focus(); }
 });
 
@@ -1500,6 +1671,7 @@ function saveAll(){
   saveTimer = setTimeout(function(){
     var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; });
     blob.playlists = playlists; blob.favs = favPl.files; blob.seenVersion = PAGE_VERSION;
+    blob.plays = plays; blob.recent = recentPl.files;
     post({ ui: blob }).catch(function(){});
   }, 350);
 }
@@ -1585,6 +1757,78 @@ function closeSettings(){ document.body.classList.remove('settings-open'); }
 $('openSet').addEventListener('click', openSettings);
 $('closeSet').addEventListener('click', closeSettings);
 $('scrim').addEventListener('click', closeSettings);
+
+/* ---------- sleep timer (Windows) ---------- */
+var sleepAt = 0, sleepEnd = false;
+function setSleep(v){
+  sleepEnd = v === 'end'; sleepAt = !sleepEnd && +v > 0 ? Date.now() + (+v) * 60000 : 0;
+  Array.prototype.forEach.call(document.querySelectorAll('#sleepRow .pill'), function(b){ b.classList.toggle('on', b.dataset.sleep === String(v)); });
+  sleepTick();
+}
+function sleepTick(){
+  var h = $('sleepHint');
+  if(sleepAt){
+    var left = Math.ceil((sleepAt - Date.now()) / 1000);
+    if(left <= 0){ audio.pause(); setSleep('0'); toast('Sleep timer: music paused'); return; }
+    h.textContent = 'Music pauses in ' + fmt(left) + '.';
+  } else h.textContent = sleepEnd ? 'Music stops when this song ends.' : 'Off.';
+}
+Array.prototype.forEach.call(document.querySelectorAll('#sleepRow .pill'), function(b){
+  b.addEventListener('click', function(){ setSleep(b.dataset.sleep); if(b.dataset.sleep !== '0') toast('Sleep timer set'); });
+});
+setSleep('0'); setInterval(sleepTick, 1000);
+
+/* ---------- move playlists between devices ---------- */
+function resolveFile(f){       // the same song can sit under a different folder on another device, so fall back to its file name
+  if(indexOfFile(f) >= 0) return f;
+  var i = baseIdx[String(f).split(/[\\/]/).pop().toLowerCase()];
+  return typeof i === 'number' ? songs[i].file : null;
+}
+$('backupMake').addEventListener('click', function(){
+  var box = $('backupText');
+  box.value = JSON.stringify({ lunarMusicBackup: 1, favs: favPl.files, playlists: playlists.map(function(p){ return { name: p.name, files: p.files }; }) });
+  box.focus(); box.select();
+  var manual = function(){ hint('backupHint', 'The text is selected: copy it, then paste it into Lunar Music on your other device.', 'ok'); };
+  try{ navigator.clipboard.writeText(box.value).then(function(){ hint('backupHint', 'Copied. Paste it into Lunar Music on your other device and press Restore.', 'ok'); }, manual); }
+  catch(e){ manual(); }
+});
+$('backupLoad').addEventListener('click', function(){
+  var data = null;
+  try{ data = JSON.parse($('backupText').value); }catch(e){}
+  if(!data || data.lunarMusicBackup !== 1){ hint('backupHint', 'That is not a Lunar Music backup. Paste the whole text from the other device.', 'bad'); return; }
+  var missing = 0, lists = 0, favs = 0;
+  function bring(files, into){
+    var n = 0;
+    (Array.isArray(files) ? files : []).forEach(function(f){
+      var here = typeof f === 'string' ? resolveFile(f) : null;
+      if(!here){ missing++; return; }
+      if(into.indexOf(here) < 0){ into.push(here); n++; }
+    });
+    return n;
+  }
+  favs = bring(data.favs, favPl.files);
+  (Array.isArray(data.playlists) ? data.playlists : []).forEach(function(src){
+    if(!src || typeof src.name !== 'string') return;
+    var name = src.name.trim().slice(0, 60) || 'Playlist', p = null;
+    playlists.forEach(function(x){ if(x.name.toLowerCase() === name.toLowerCase()) p = x; });
+    if(!p){ p = newPlaylist(); p.name = name; }
+    bring(src.files, p.files); lists++;
+  });
+  saveAll(); updateFav(); buildQueue(); renderList();
+  hint('backupHint', 'Restored ' + lists + (lists === 1 ? ' playlist' : ' playlists') + ' and ' + favs + (favs === 1 ? ' new favorite' : ' new favorites') + '.' +
+    (missing ? ' ' + plural(missing) + ' in the backup ' + (missing === 1 ? 'is' : 'are') + ' not on this device and ' + (missing === 1 ? 'was' : 'were') + ' skipped.' : ''), missing ? 'bad' : 'ok');
+});
+
+/* ---------- quick Clunk Mode: press K, or tap the logo three times ---------- */
+function quickClunk(){ ui.clunk = !ui.clunk; changed(); }
+var logoTaps = 0, logoTimer = 0;
+['.logo', '.brand'].forEach(function(sel){
+  document.querySelector('header ' + sel).addEventListener('click', function(){
+    logoTaps++; clearTimeout(logoTimer);
+    if(logoTaps >= 3){ logoTaps = 0; quickClunk(); return; }
+    logoTimer = setTimeout(function(){ logoTaps = 0; }, 700);
+  });
+});
 
 /* ---------- messages from the iPhone app ---------- */
 window.lunarNative = function(ev){
