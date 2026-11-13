@@ -34,3 +34,9 @@ which signs it with your Apple ID.
 The app checks this repository for a newer `LunarMusic/app.html` whenever it is opened and
 uses it automatically, so most new features arrive without reinstalling. This only works while
 the repository is public. Changes to the Swift files still need a new IPA.
+
+## Sync
+
+With a one-time Google setup, a PC running Lunar Music sends its songs, icons and lyrics to a
+private "Lunar Music" folder in your own Google Drive, and this app downloads them into
+SONGS, ICONS and LYRICS. Set it up under Settings > Sync with Google Drive.

@@ -258,6 +258,16 @@ body.playing .btn.play .ipause{display:block}
   background:color-mix(in srgb,var(--bg) 80%,rgb(var(--accent-rgb)));box-shadow:0 12px 30px -8px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* ---------- sync ---------- */
+.synccode{margin:10px 0 4px;padding:12px;border-radius:14px;border:1px solid var(--line-bright);background:rgba(5,8,22,.5);text-align:center}
+.synccode b{display:block;font-size:26px;letter-spacing:.14em;font-weight:600;color:var(--ink);user-select:text;-webkit-user-select:text;margin:4px 0}
+.synccode span{font-size:12.5px;color:var(--ink-soft)}
+.syncsteps{margin:6px 0 0 18px;padding:0;font-size:12.5px;line-height:1.6;color:var(--ink-soft)}
+[hidden]{display:none!important}
+body.clunk .synccode{background:#fff;border:2px inset #fff}
+body.clunk .synccode b{font-size:18px;color:#000}
+body.clunk .syncsteps{color:#000;font-size:11px}
+
 /* ---------- 1.9 extras ---------- */
 .upnext{margin-top:3px;font-size:12px;color:var(--ink-faint);min-height:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 .qclear{width:22px;height:22px;border-radius:50%;border:0;background:rgba(var(--accent-rgb),.2);color:var(--ink);cursor:pointer;flex:none;display:grid;place-items:center;padding:0}
@@ -322,6 +332,7 @@ body.native .lyrbtn.favbtn{right:auto;left:12px}
 /* ---------- iPhone app ---------- */
 .ios-only{display:none}
 body.native .ios-only{display:block}
+body.native span.ios-only{display:inline}
 body.native .desk-only{display:none}
 body.native .app{padding:calc(12px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom));gap:14px}
 body.native .drawer{top:calc(10px + env(safe-area-inset-top));bottom:calc(10px + env(safe-area-inset-bottom));right:10px;width:calc(100vw - 20px)}
@@ -657,6 +668,32 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
       </div>
       <div class="hint" id="sleepHint"></div>
     </div>
+
+    <h3>Sync with Google Drive</h3>
+    <div id="syncOld" class="hint" style="margin-top:0">Sync needs the newest Lunar Music program on this device (Windows exe v9 or later, or the latest iPhone build).</div>
+    <div id="syncSetup" hidden>
+      <div class="hint" style="margin-top:0">Keeps this device's songs, icons and lyrics the same as your PC, through a private folder in your own Google Drive.</div>
+      <label class="pathlabel" for="syncId">Google client ID <span class="ios-only">(or paste the setup text from your PC here)</span></label>
+      <input class="path" id="syncId" spellcheck="false" autocomplete="off" style="width:100%">
+      <label class="pathlabel" for="syncSecret">Google client secret</label>
+      <input class="path" id="syncSecret" spellcheck="false" autocomplete="off" style="width:100%">
+      <div class="pathrow wrap" style="margin-top:10px"><button class="pill" id="syncSignIn">Sign in with Google</button></div>
+    </div>
+    <div id="syncCode" hidden>
+      <div class="synccode"><span>On any device, open <u>google.com/device</u> and enter</span><b id="syncUserCode"></b><span>then choose your Google account and allow access.</span></div>
+      <div class="pathrow wrap"><button class="pill" id="syncOpen">Open that page</button><button class="pill quiet" id="syncCancel">Cancel</button></div>
+    </div>
+    <div id="syncOn" hidden>
+      <div class="desk-only">
+        <div class="pathrow wrap" id="syncRole">
+          <button class="pill" data-role="upload">This PC sends its music</button><button class="pill" data-role="download">This PC receives music</button>
+        </div>
+      </div>
+      <div class="pathrow wrap" style="margin-top:10px">
+        <button class="pill" id="syncNow">Sync now</button><button class="pill desk-only" id="syncCopy">Copy setup for my phone</button><button class="pill quiet" id="syncOut">Sign out</button>
+      </div>
+    </div>
+    <div class="hint" id="syncStatus"></div>
 
     <h3>Move playlists between devices</h3>
     <div class="hint" style="margin-top:0">Copy this text on one device and paste it into Lunar Music on the other to bring your playlists and favorites across.</div>
@@ -1050,6 +1087,10 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.0', when: 'Nov 12', notes: [
+    'Sync with Google Drive: your PC sends its songs, icons and lyrics to a private folder in your own Drive, and your iPhone downloads them',
+    'Needs the newest Windows exe and iPhone build, plus a one-time Google setup (Settings)'
+  ] },
   { v: '1.9', when: 'Nov 12', notes: [
     'Queue tab: see what is coming up, jump to a song, or remove one',
     'The player shows which song is next',
@@ -1105,6 +1146,7 @@ $('newsOk').addEventListener('click', closeNews);
 $('news').addEventListener('click', function(e){ if(e.target === $('news')) closeNews(); });
 function loadPlaylists(blob){
   if(blob && Array.isArray(blob.favs)){ favPl.files = blob.favs.filter(function(f){ return typeof f === 'string'; }); updateFav(); }
+  loadSync(blob && blob.sync);
   if(blob && Array.isArray(blob.recent)) recentPl.files = blob.recent.filter(function(f){ return typeof f === 'string'; }).slice(0, 50);
   if(blob && blob.plays && typeof blob.plays === 'object'){
     plays = {}; Object.keys(blob.plays).forEach(function(f){ var n = blob.plays[f]; if(typeof n === 'number' && n > 0) plays[f] = Math.floor(n); });
@@ -1671,7 +1713,7 @@ function saveAll(){
   saveTimer = setTimeout(function(){
     var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; });
     blob.playlists = playlists; blob.favs = favPl.files; blob.seenVersion = PAGE_VERSION;
-    blob.plays = plays; blob.recent = recentPl.files;
+    blob.plays = plays; blob.recent = recentPl.files; blob.sync = syncState;
     post({ ui: blob }).catch(function(){});
   }, 350);
 }
@@ -1710,6 +1752,7 @@ function applyIcon(){
   $('favicon').href = customIcon ? url : MOON_FAVICON;
 }
 function gotSettings(s){
+  if(Array.isArray(s.caps)){ HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
   customIcon = !!s.customIcon; iconVersion = s.iconVersion || 0;
   $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || ''; $('pLyrics').value = s.lyrics || '';
   applyIcon();
@@ -1757,6 +1800,258 @@ function closeSettings(){ document.body.classList.remove('settings-open'); }
 $('openSet').addEventListener('click', openSettings);
 $('closeSet').addEventListener('click', closeSettings);
 $('scrim').addEventListener('click', closeSettings);
+
+/* ---------- sync with Google Drive ----------
+   The PC uploads its songs, icons and lyrics to a private "Lunar Music" folder in the user's own
+   Google Drive; a receiving device downloads them. The engine/app does the file and network work
+   (see host()); everything else is here.
+   - Sign-in uses Google's code flow: show a code, the user approves it at google.com/device.
+   - Permission is "drive.file": only files this app created are visible to it.
+   - Sending: upload what is missing or changed, remove from Drive what was deleted locally.
+   - Receiving: download what is missing or changed, remove local files that sync had downloaded
+     earlier and that are gone from Drive. Files the user added by hand are never deleted. */
+var GOOGLE = window.LUNAR_GOOGLE || { oauth: 'https://oauth2.googleapis.com', api: 'https://www.googleapis.com' };
+var HOST_OK = false, hostSeq = 0, hostWait = {};
+var syncState = { clientId: '', clientSecret: '', refresh: '', role: NATIVE ? 'download' : '', got: { songs: {}, icons: {}, lyrics: {} }, last: 0 };
+var syncBusy = false, syncToken = '', syncTokenUntil = 0, syncPoll = 0, syncLastTry = 0, syncConfirmUntil = 0;
+var SYNC_ROOTS = [['songs', 'SONGS'], ['icons', 'ICONS'], ['lyrics', 'LYRICS']];
+
+function host(op, args){
+  args = args || {};
+  if(NATIVE) return new Promise(function(res, rej){
+    var id = ++hostSeq, m = { cmd: 'host', op: op, id: id };
+    Object.keys(args).forEach(function(k){ m[k] = args[k]; });
+    hostWait[id] = { res: res, rej: rej }; send(m);
+  });
+  var body = { op: op }; Object.keys(args).forEach(function(k){ body[k] = args[k]; });
+  return fetch('/api/host', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function(r){ return r.json(); }).then(function(d){ if(!d.ok) throw new Error(d.error || 'failed'); return d.result; });
+}
+function loadSync(src){
+  if(!src || typeof src !== 'object') { syncUI(); return; }
+  ['clientId', 'clientSecret', 'refresh'].forEach(function(k){ if(typeof src[k] === 'string') syncState[k] = src[k]; });
+  if(!NATIVE && (src.role === 'upload' || src.role === 'download')) syncState.role = src.role;
+  if(typeof src.last === 'number') syncState.last = src.last;
+  if(src.got && typeof src.got === 'object') SYNC_ROOTS.forEach(function(r){
+    var g = src.got[r[0]]; if(g && typeof g === 'object') syncState.got[r[0]] = g;
+  });
+  syncUI();
+}
+function syncSay(text, cls){ hint('syncStatus', text, cls); }
+function ago(t){
+  var m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago';
+}
+function syncUI(){
+  var signedIn = !!syncState.refresh, waiting = !!syncPoll;
+  $('syncOld').hidden = HOST_OK;
+  $('syncSetup').hidden = !HOST_OK || signedIn || waiting;
+  $('syncCode').hidden = !HOST_OK || !waiting;
+  $('syncOn').hidden = !HOST_OK || !signedIn;
+  if(document.activeElement !== $('syncId')) $('syncId').value = syncState.clientId;
+  if(document.activeElement !== $('syncSecret')) $('syncSecret').value = syncState.clientSecret;
+  Array.prototype.forEach.call(document.querySelectorAll('#syncRole .pill'), function(b){ b.classList.toggle('on', b.dataset.role === syncState.role); });
+  $('syncNow').hidden = !syncState.role;
+  if(HOST_OK && signedIn && !syncState.role) syncSay('Signed in. Now choose: is this the PC that holds your music (it sends), or should it receive music from another PC?');
+  else if(HOST_OK && signedIn && !syncBusy) syncSay((syncState.role === 'upload' ? 'This device sends its music to Google Drive. ' : 'This device receives music from Google Drive. ') +
+    (syncState.last ? 'Last synced ' + ago(syncState.last) + '.' : 'Not synced yet.'));
+  else if(HOST_OK && !signedIn && !waiting && !syncBusy) syncSay('');
+}
+function form(o){ return Object.keys(o).map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(o[k]); }).join('&'); }
+function parse(r){ var j = null; try{ j = JSON.parse(r.body || 'null'); }catch(e){} return { status: r.status, json: j || {}, location: r.location || '' }; }
+function oauth(path, params){
+  return host('http', { url: GOOGLE.oauth + path, method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form(params) }).then(parse);
+}
+
+/* --- sign in --- */
+function readSetup(){
+  var id = $('syncId').value.trim(), secret = $('syncSecret').value.trim();
+  if(id.charAt(0) === '{'){                 // setup text copied from the PC
+    try{ var d = JSON.parse(id); if(d.lunarSync === 1){ id = String(d.clientId || ''); secret = String(d.clientSecret || ''); } }catch(e){}
+  }
+  syncState.clientId = id; syncState.clientSecret = secret;
+  $('syncId').value = id; $('syncSecret').value = secret;
+  return id && secret;
+}
+function signIn(){
+  if(!readSetup()){ syncSay('Fill in the client ID and client secret from Google first.', 'bad'); return; }
+  saveAll(); syncSay('Asking Google for a sign-in code…');
+  oauth('/device/code', { client_id: syncState.clientId, scope: 'https://www.googleapis.com/auth/drive.file' }).then(function(r){
+    if(r.status !== 200 || !r.json.device_code){
+      syncSay('Google did not accept that client ID' + (r.json.error ? ' (' + r.json.error + ')' : '') + '. Check that it is the "TVs and Limited Input devices" kind.', 'bad'); return;
+    }
+    var code = r.json.device_code, every = Math.max(3, r.json.interval || 5) * 1000, until = Date.now() + (r.json.expires_in || 1800) * 1000;
+    $('syncUserCode').textContent = r.json.user_code;
+    syncSay('Waiting for you to approve the code…');
+    function ask(){
+      if(Date.now() > until){ cancelSignIn(); syncSay('That code ran out. Press Sign in to get a new one.', 'bad'); return; }
+      oauth('/token', { client_id: syncState.clientId, client_secret: syncState.clientSecret, device_code: code, grant_type: 'urn:ietf:params:oauth:grant-type:device_code' }).then(function(t){
+        if(!syncPoll) return;
+        if(t.json.refresh_token){
+          syncState.refresh = t.json.refresh_token; syncToken = t.json.access_token || ''; syncTokenUntil = Date.now() + ((t.json.expires_in || 3600) - 60) * 1000;
+          cancelSignIn(); saveAll(); syncUI(); toast('Signed in to Google Drive'); runSync(true); return;     // (waits for a send/receive choice on a PC)
+        }
+        var e = t.json.error;
+        if(e === 'authorization_pending' || e === 'slow_down' || !e){ if(e === 'slow_down') every += 2000; syncPoll = setTimeout(ask, every); return; }
+        cancelSignIn(); syncSay(e === 'access_denied' ? 'Sign-in was refused on the Google page.' : 'Sign-in failed (' + e + '). Check the client secret.', 'bad');
+      }).catch(function(){ if(syncPoll) syncPoll = setTimeout(ask, every); });
+    }
+    syncPoll = setTimeout(ask, every); syncUI();
+  }).catch(function(e){ syncSay('Could not reach Google: ' + e.message, 'bad'); });
+}
+function cancelSignIn(){ clearTimeout(syncPoll); syncPoll = 0; syncUI(); }
+function signOut(){
+  syncState.refresh = ''; syncToken = ''; syncState.last = 0; cancelSignIn(); saveAll(); syncUI();
+  syncSay('Signed out. Nothing was removed from this device or from Google Drive.');
+}
+function accessToken(force){
+  if(!force && syncToken && Date.now() < syncTokenUntil) return Promise.resolve(syncToken);
+  return oauth('/token', { client_id: syncState.clientId, client_secret: syncState.clientSecret, refresh_token: syncState.refresh, grant_type: 'refresh_token' }).then(function(t){
+    if(!t.json.access_token){
+      if(t.json.error === 'invalid_grant'){ syncState.refresh = ''; saveAll(); syncUI(); throw new Error('Google asked you to sign in again'); }
+      throw new Error('Google did not renew the sign-in' + (t.json.error ? ' (' + t.json.error + ')' : ''));
+    }
+    syncToken = t.json.access_token; syncTokenUntil = Date.now() + ((t.json.expires_in || 3600) - 60) * 1000;
+    return syncToken;
+  });
+}
+
+/* --- Google Drive --- */
+function drive(method, path, body, retried){
+  return accessToken(false).then(function(tok){
+    return host('http', { url: GOOGLE.api + path, method: method, headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '' });
+  }).then(parse).then(function(r){
+    if(r.status === 401 && !retried) return accessToken(true).then(function(){ return drive(method, path, body, true); });
+    if(r.status >= 400) throw new Error('Google Drive said ' + r.status + (r.json.error && r.json.error.message ? ': ' + r.json.error.message : ''));
+    return r;
+  });
+}
+function folderId(name, parent){
+  var q = "name='" + name + "' and mimeType='application/vnd.google-apps.folder' and trashed=false" + (parent ? " and '" + parent + "' in parents" : '');
+  return drive('GET', '/drive/v3/files?fields=' + encodeURIComponent('files(id,name)') + '&q=' + encodeURIComponent(q)).then(function(r){
+    if(r.json.files && r.json.files.length) return r.json.files[0].id;
+    if(syncState.role !== 'upload') return null;                 // a receiver never creates folders
+    var meta = { name: name, mimeType: 'application/vnd.google-apps.folder' }; if(parent) meta.parents = [parent];
+    return drive('POST', '/drive/v3/files?fields=id', meta).then(function(c){ return c.json.id; });
+  });
+}
+function remoteList(folder){
+  var out = {}, extra = [];
+  function page(tok){
+    var q = "'" + folder + "' in parents and trashed=false";
+    return drive('GET', '/drive/v3/files?pageSize=1000&fields=' + encodeURIComponent('nextPageToken,files(id,name,size)') + '&q=' + encodeURIComponent(q) + (tok ? '&pageToken=' + encodeURIComponent(tok) : '')).then(function(r){
+      (r.json.files || []).forEach(function(f){ if(out[f.name]) extra.push(f.id); else out[f.name] = { id: f.id, size: +f.size || 0 }; });
+      return r.json.nextPageToken ? page(r.json.nextPageToken) : { files: out, extra: extra };
+    });
+  }
+  return page('');
+}
+function sendFile(root, folder, name, existing){
+  var start = existing ? drive('PATCH', '/upload/drive/v3/files/' + existing + '?uploadType=resumable', {})
+                       : drive('POST', '/upload/drive/v3/files?uploadType=resumable', { name: name, parents: [folder] });
+  return start.then(function(r){
+    if(!r.location) throw new Error('Google Drive did not open an upload');
+    return host('upload', { url: r.location, method: 'PUT', headers: {}, root: root, file: name });
+  }).then(function(r){ if(r.status !== 200 && r.status !== 201) throw new Error('upload stopped with ' + r.status); });
+}
+function getFile(root, name, id){
+  return accessToken(false).then(function(tok){
+    return host('download', { url: GOOGLE.api + '/drive/v3/files/' + id + '?alt=media', headers: { 'Authorization': 'Bearer ' + tok }, root: root, file: name });
+  }).then(function(r){ if(r.status !== 200) throw new Error('download stopped with ' + r.status); });
+}
+
+/* --- the sync itself --- */
+function runSync(manual){
+  if(!HOST_OK || !syncState.refresh || !syncState.role || syncBusy) return Promise.resolve();
+  if(!manual && Date.now() - syncLastTry < 5 * 60000) return Promise.resolve();
+  syncBusy = true; syncLastTry = Date.now();
+  var sending = syncState.role === 'upload', added = 0, removed = 0, failed = 0, jobs = [], local;
+  // Removing a lot at once usually means something is wrong (wrong PC, unplugged drive, wrong setting),
+  // so big removals are held back until the user presses Sync now a second time.
+  var confirmed = manual && Date.now() < syncConfirmUntil, held = 0;
+  syncConfirmUntil = 0;
+  function removals(list, outOf){
+    if(!list.length) return;
+    if(list.length > 3 && list.length > outOf / 2 && !confirmed){ held += list.length; return; }
+    list.forEach(function(j){ jobs.push(j); });
+  }
+  syncSay('Checking Google Drive…');
+  function each(list, fn){            // one at a time, so a big library does not flood the connection
+    var i = 0;
+    function step(){ if(i >= list.length) return Promise.resolve(); return fn(list[i++], i).then(step); }
+    return step();
+  }
+  return host('files').then(function(l){ local = l; return folderId('Lunar Music', ''); }).then(function(top){
+    if(!top) throw new Error('nothing has been sent to Google Drive yet. Sync from your PC first');
+    return each(SYNC_ROOTS, function(pair){
+      var root = pair[0], here = {}, info = local[root] || { found: false, files: [] };
+      info.files.forEach(function(f){ here[f.file] = f.size; });
+      return folderId(pair[1], top).then(function(folder){
+        if(!folder) return;
+        return remoteList(folder).then(function(remote){
+          var names = Object.keys(remote.files), mine = Object.keys(here);
+          if(sending){
+            mine.forEach(function(n){ if(!remote.files[n] || remote.files[n].size !== here[n]) jobs.push({ kind: 'up', root: root, folder: folder, name: n, id: remote.files[n] ? remote.files[n].id : '' }); });
+            if(info.found && mine.length){        // never empty the Drive because a folder was unplugged or missing
+              removals(names.filter(function(n){ return !(n in here); }).map(function(n){ return { kind: 'drop', id: remote.files[n].id, name: n }; }), names.length);
+              remote.extra.forEach(function(id){ jobs.push({ kind: 'drop', id: id, name: '' }); });
+            }
+          } else {
+            names.forEach(function(n){ if(here[n] !== remote.files[n].size) jobs.push({ kind: 'down', root: root, name: n, id: remote.files[n].id, size: remote.files[n].size }); });
+            if(names.length){                      // only files that sync itself brought here are ever removed
+              var gone = [], had = Object.keys(syncState.got[root]);
+              had.forEach(function(n){ if(!remote.files[n]){ if(n in here) gone.push({ kind: 'del', root: root, name: n }); else delete syncState.got[root][n]; } });
+              removals(gone, had.length);
+            }
+          }
+        });
+      });
+    });
+  }).then(function(){
+    var work = jobs.filter(function(j){ return j.kind === 'up' || j.kind === 'down'; }).length, done = 0;
+    return each(jobs, function(j){
+      var p;
+      if(j.kind === 'up'){ syncSay('Sending ' + (++done) + ' of ' + work + ': ' + j.name); p = sendFile(j.root, j.folder, j.name, j.id).then(function(){ added++; }); }
+      else if(j.kind === 'down'){ syncSay('Getting ' + (++done) + ' of ' + work + ': ' + j.name); p = getFile(j.root, j.name, j.id).then(function(){ added++; syncState.got[j.root][j.name] = j.size; }); }
+      else if(j.kind === 'drop') p = drive('DELETE', '/drive/v3/files/' + j.id).then(function(){ if(j.name) removed++; });
+      else p = host('delete', { root: j.root, file: j.name }).then(function(){ removed++; delete syncState.got[j.root][j.name]; });
+      return p.catch(function(){ failed++; });
+    });
+  }).then(function(){
+    syncBusy = false; syncState.last = Date.now(); saveAll(); syncUI();
+    if(failed) syncSay((sending ? 'Sent ' : 'Got ') + added + ', removed ' + removed + ', but ' + failed + ' did not go through. They will be tried again next time.', 'bad');
+    if(sending && local.songs && !local.songs.found) syncSay('Your songs folder was not found on this PC (is the drive plugged in?), so nothing was changed in Google Drive.', 'bad');
+    if(held){
+      syncConfirmUntil = Date.now() + 2 * 60000;
+      syncSay(sending ? held + ' files in Google Drive are not on this PC. Nothing was removed, in case that is a mistake. If you really deleted them, press Sync now again within two minutes to remove them from Drive (and then from your phone).'
+                      : held + ' songs on this device are no longer in Google Drive. Nothing was removed, in case that is a mistake. Press Sync now again within two minutes to remove them here.', 'bad');
+    }
+    if(added || removed){
+      toast('Sync: ' + added + (sending ? ' sent' : ' new') + (removed ? ', ' + removed + ' removed' : ''));
+      if(!sending) fetchLibrary(true);
+    } else if(manual && !failed) toast('Everything is already in sync');
+  }).catch(function(e){
+    syncBusy = false; syncUI();
+    syncSay('Sync did not finish: ' + (e && e.message ? e.message : 'unknown problem') + '.', 'bad');
+  });
+}
+$('syncSignIn').addEventListener('click', signIn);
+$('syncCancel').addEventListener('click', function(){ cancelSignIn(); syncSay(''); });
+$('syncOpen').addEventListener('click', function(){
+  if(NATIVE) host('open', { url: 'https://www.google.com/device' }).catch(function(){});
+  else window.open('https://www.google.com/device', '_blank');
+});
+$('syncNow').addEventListener('click', function(){ runSync(true); });
+$('syncOut').addEventListener('click', signOut);
+$('syncCopy').addEventListener('click', function(){
+  var text = JSON.stringify({ lunarSync: 1, clientId: syncState.clientId, clientSecret: syncState.clientSecret });
+  var manual = function(){ $('backupText').value = text; $('backupText').focus(); $('backupText').select(); syncSay('The setup text is in the box below: copy it and send it to your phone.', 'ok'); };
+  try{ navigator.clipboard.writeText(text).then(function(){ syncSay('Setup copied. Send it to your phone and paste it into the client ID box there.', 'ok'); }, manual); }catch(e){ manual(); }
+});
+Array.prototype.forEach.call(document.querySelectorAll('#syncRole .pill'), function(b){
+  b.addEventListener('click', function(){ if(syncBusy) return; syncState.role = b.dataset.role; saveAll(); syncUI(); runSync(true); });
+});
+setInterval(function(){ runSync(false); }, 15 * 60000);
 
 /* ---------- sleep timer (Windows) ---------- */
 var sleepAt = 0, sleepEnd = false;
@@ -1854,6 +2149,11 @@ window.lunarNative = function(ev){
     }
     if(ev.file){ adopt(ev.file, ev.pos); audio.setTime(ev.t || 0); audio.duration = ev.d; audio.emit('loadedmetadata'); audio.emit('timeupdate'); }
     setPlaying(!!ev.playing);
+    if(!ev.hello) runSync(false);        // the app came back to the front: a good moment to look for new music
+  }
+  else if(ev.type === 'host'){
+    var w = hostWait[ev.id]; delete hostWait[ev.id];
+    if(w){ if(ev.ok) w.res(ev.result); else w.rej(new Error(String(ev.error || 'failed'))); }
   }
   else if(ev.type === 'toast'){ toast(String(ev.text || '')); }
   else if(ev.type === 'settings'){

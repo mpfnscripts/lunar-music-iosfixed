@@ -286,6 +286,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
             "songsFound": true, "iconsFound": true,
             "customIcon": FileManager.default.fileExists(atPath: Library.customIcon.path),
             "iconVersion": defaults.integer(forKey: "iconVersion"),
+            "caps": ["sync"],
         ]
     }
 
@@ -309,6 +310,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
 final class PlayerViewController: UIViewController, WKScriptMessageHandler {
     private var webView: WKWebView!
     private let player = Player()
+    private let hostBridge = HostBridge()
     private var toldAboutReinstall = false
     private var lastUpdateCheck = Date.distantPast
 
@@ -380,6 +382,14 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
         func double(_ key: String) -> Double { return (body[key] as? NSNumber)?.doubleValue ?? 0 }
 
         switch cmd {
+        case "host":
+            // A helper job for the page's Google Drive sync (see Sync.swift).
+            let id = int("id")
+            hostBridge.handle(body) { [weak self] ok, value in
+                var event: [String: Any] = ["type": "host", "id": id, "ok": ok]
+                event[ok ? "result" : "error"] = value
+                self?.send(event)
+            }
         case "hello":
             // A freshly loaded page asking what is going on (for example after an update restart).
             var snapshot = player.snapshot()
