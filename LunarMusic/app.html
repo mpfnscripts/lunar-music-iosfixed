@@ -258,6 +258,10 @@ body.playing .btn.play .ipause{display:block}
   background:color-mix(in srgb,var(--bg) 80%,rgb(var(--accent-rgb)));box-shadow:0 12px 30px -8px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* ---------- offline mode ---------- */
+.count.offl{color:#ffd9a8;border-color:rgba(255,200,140,.5)}
+body.clunk .count.offl{color:#a00000}
+
 /* ---------- sync ---------- */
 .synccode{margin:10px 0 4px;padding:12px;border-radius:14px;border:1px solid var(--line-bright);background:rgba(5,8,22,.5);text-align:center}
 .synccode b{display:block;font-size:26px;letter-spacing:.14em;font-weight:600;color:var(--ink);user-select:text;-webkit-user-select:text;margin:4px 0}
@@ -519,6 +523,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <div class="logo"></div>
     <div class="brand"><b>Lunar</b> Music<span class="clunk-only"> - music_player.py</span></div>
     <div class="spacer"></div>
+    <div class="count offl" id="offBadge" hidden title="No connection to GitHub. Your music still plays; updates and sync wait until you are back online.">Offline</div>
     <div class="count" id="count"></div>
     <button class="btn small" id="openSet" title="Settings" aria-label="Settings">
       <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6zM13 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4z" transform="translate(-1 0)"/></svg>
@@ -702,6 +707,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <div class="hint" id="backupHint"></div>
 
     <h3>Update log</h3>
+    <div class="hint" id="netLine" style="margin:0 0 10px"></div>
     <div class="about" id="about"></div>
 
     <div class="drawerfoot"><button class="pill quiet" id="resetAll">Reset look to Lunar default</button></div>
@@ -1087,6 +1093,10 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.1', when: 'Nov 13', notes: [
+    'Offline mode: when GitHub cannot be reached the app shows an Offline badge, keeps playing your music, and pauses update checks and sync until the connection is back',
+    'Settings shows whether you are connected'
+  ] },
   { v: '2.0', when: 'Nov 12', notes: [
     'Sync with Google Drive: your PC sends its songs, icons and lyrics to a private folder in your own Drive, and your iPhone downloads them',
     'Needs the newest Windows exe and iPhone build, plus a one-time Google setup (Settings)'
@@ -1874,6 +1884,7 @@ function readSetup(){
   return id && secret;
 }
 function signIn(){
+  if(offline){ syncSay('You are offline. Connect to the internet to sign in to Google.', 'bad'); return; }
   if(!readSetup()){ syncSay('Fill in the client ID and client secret from Google first.', 'bad'); return; }
   saveAll(); syncSay('Asking Google for a sign-in code…');
   oauth('/device/code', { client_id: syncState.clientId, scope: 'https://www.googleapis.com/auth/drive.file' }).then(function(r){
@@ -1963,6 +1974,7 @@ function getFile(root, name, id){
 /* --- the sync itself --- */
 function runSync(manual){
   if(!HOST_OK || !syncState.refresh || !syncState.role || syncBusy) return Promise.resolve();
+  if(offline){ if(manual) syncSay('You are offline, so sync is waiting. It will carry on by itself when the connection is back.', 'bad'); return Promise.resolve(); }
   if(!manual && Date.now() - syncLastTry < 5 * 60000) return Promise.resolve();
   syncBusy = true; syncLastTry = Date.now();
   var sending = syncState.role === 'upload', added = 0, removed = 0, failed = 0, jobs = [], local;
@@ -2188,6 +2200,40 @@ function ping(){
   }).catch(function(){});
 }
 ping(); setInterval(ping, 20000);
+
+/* ---------- offline mode ----------
+   Lunar Music always plays the music stored on the device. What needs the internet is checking
+   GitHub for updates and syncing with Google Drive. When GitHub cannot be reached the app says
+   so, stops trying to sync, and keeps looking for the connection so it can pick up again. */
+var offline = false, netChecked = 0, netTimer = 0, offlineTold = false;
+var PROBE_URL = window.LUNAR_PROBE || 'https://raw.githubusercontent.com/mpfnscripts/lunar-music-iosfixed/main/README.md';
+function netLine(){
+  $('netLine').textContent = !netChecked ? 'Checking the connection to GitHub\u2026'
+    : offline ? 'Offline mode: GitHub cannot be reached, so this is the version saved on this device (' + PAGE_VERSION + '). Updates and sync start again by themselves when you are back online.'
+    : 'Connected. Lunar Music checks GitHub for updates every time it opens.';
+  $('netLine').className = 'hint' + (netChecked && offline ? ' bad' : '');
+}
+function setOffline(now){
+  var was = offline; offline = now; netChecked = Date.now();
+  document.body.classList.toggle('offline', offline);
+  $('offBadge').hidden = !offline;
+  netLine();
+  if(offline && !was && !offlineTold){ offlineTold = true; toast('No connection: offline mode. Your music still plays.'); }
+  if(!offline && was){ toast('Back online'); syncLastTry = 0; runSync(false); syncUI(); }
+  clearTimeout(netTimer); netTimer = setTimeout(checkNet, offline ? 45000 : 5 * 60000);     // look more often while offline
+}
+function checkNet(){
+  if(navigator.onLine === false){ setOffline(true); return; }
+  var done = false, ctl = window.AbortController ? new AbortController() : null;
+  var giveUp = setTimeout(function(){ if(done) return; done = true; if(ctl) ctl.abort(); setOffline(true); }, 8000);
+  // "no-cors": any answer at all means the connection works; only a failed request means offline
+  fetch(PROBE_URL, { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function(){
+    if(done) return; done = true; clearTimeout(giveUp); setOffline(false);
+  }, function(){ if(done) return; done = true; clearTimeout(giveUp); setOffline(true); });
+}
+window.addEventListener('online', checkNet);
+window.addEventListener('offline', function(){ setOffline(true); });
+netLine(); setTimeout(checkNet, 800);
 })();
 </script>
 </body>
