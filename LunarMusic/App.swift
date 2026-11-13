@@ -309,7 +309,6 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
 final class PlayerViewController: UIViewController, WKScriptMessageHandler {
     private var webView: WKWebView!
     private let player = Player()
-    private var updateWaiting = false
     private var toldAboutReinstall = false
     private var lastUpdateCheck = Date.distantPast
 
@@ -342,18 +341,13 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
     /// Tell the page what is playing right now (used when the app comes back to the front).
     func syncPage() {
         guard isViewLoaded else { return }
-        if updateWaiting && !player.isPlaying {
-            updateWaiting = false
-            webView.reload()
-        } else {
-            send(player.snapshot())
-        }
+        send(player.snapshot())
         checkForUpdate()
     }
 
     /// Look for a newer player page every time the app is opened or brought back to the front
-    /// (the short gap only stops double checks). It is applied straight away if nothing is
-    /// playing, otherwise the next time the app is opened while the music is stopped.
+    /// (the short gap only stops double checks). A new page is applied straight away by restarting
+    /// the screen; the music keeps playing, and the fresh page asks what is playing ("hello").
     private func checkForUpdate() {
         guard Date().timeIntervalSince(lastUpdateCheck) > 15 else { return }
         lastUpdateCheck = Date()
@@ -361,11 +355,7 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
             guard let self = self else { return }
             switch result {
             case .updated:
-                if self.player.isPlaying {
-                    self.updateWaiting = true
-                } else {
-                    self.webView.reload()
-                }
+                self.webView.reload()
             case .needsReinstall:
                 if !self.toldAboutReinstall {
                     self.toldAboutReinstall = true
@@ -390,6 +380,11 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
         func double(_ key: String) -> Double { return (body[key] as? NSNumber)?.doubleValue ?? 0 }
 
         switch cmd {
+        case "hello":
+            // A freshly loaded page asking what is going on (for example after an update restart).
+            var snapshot = player.snapshot()
+            snapshot["hello"] = true
+            send(snapshot)
         case "queue":
             player.setQueue((body["files"] as? [String]) ?? [], repeatMode: (body["repeat"] as? String) ?? "off")
         case "playIndex":

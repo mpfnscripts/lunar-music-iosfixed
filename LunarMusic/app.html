@@ -280,9 +280,29 @@ body.playing .btn.play .ipause{display:block}
 .lyrics.plain .ll{font-size:16.5px;font-weight:400;color:var(--ink-soft);padding:3px 0;cursor:default}
 .lyrics.plain .ll.gap{height:16px}
 body.lyrics-on .stage{display:none}
+.lyrbtn.favbtn{right:auto;left:16px;padding:0 9px}
+.favbtn svg{fill:none;stroke:currentColor;stroke-width:2}
+.favbtn.active svg{fill:currentColor}
+.title{cursor:pointer}
+.row.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%,40%{background:rgba(var(--accent-rgb),.45)}100%{background:transparent}}
+.about{font-size:12.5px;line-height:1.55;color:var(--ink-soft)}
+.about .ver{margin-top:12px}
+.about .ver:first-child{margin-top:0}
+.about .when{color:var(--ink-faint);font-weight:400}
+.news{position:fixed;inset:0;z-index:8;display:grid;place-items:center;padding:20px;background:rgba(2,4,12,.55)}
+.news[hidden]{display:none}
+.newsbox{width:min(440px,100%);max-height:min(560px,86vh);display:flex;flex-direction:column;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--bg) 76%,rgb(var(--accent-rgb))),color-mix(in srgb,var(--bg) 92%,rgb(var(--accent-rgb))))}
+.newsbox h2{padding:22px 24px 4px;font-size:17px;font-weight:300;letter-spacing:.3em;text-transform:uppercase;position:relative}
+.newsbox .about{padding:10px 24px 6px;overflow-y:auto;font-size:13.5px;position:relative}
+.newsbox .foot{padding:14px 24px 20px;display:flex;justify-content:flex-end;position:relative}
+.about b{color:var(--ink);font-weight:600}
+.about ul{margin:6px 0 0 18px;padding:0}
 body.native .lyrics{--lh:min(72vw,30vh)}
 body.native .ll{font-size:17px}
 body.native .lyrbtn{top:12px;right:12px}
+body.native .lyrbtn.favbtn{right:auto;left:12px}
 
 /* ---------- iPhone app ---------- */
 .ios-only{display:none}
@@ -426,6 +446,12 @@ body.clunk input[type=range]::-webkit-slider-runnable-track{height:8px;backgroun
 body.clunk input[type=range]::-webkit-slider-thumb{width:11px;height:20px;margin-top:-6px;background:#d9d9d9;border:2px outset #fff;box-shadow:none}
 body.clunk .volume{color:#000}
 body.clunk .lyrbtn{height:24px;padding:0 8px;top:8px;right:8px}
+body.clunk .lyrbtn.favbtn{right:auto;left:8px}
+body.clunk .about,body.clunk .about b{color:#000;font-size:11px}
+body.clunk .newsbox{background:#d9d9d9;border:2px outset #fff}
+body.clunk .newsbox h2{font-size:13px;font-weight:700;text-transform:none;padding:10px 12px 2px}
+body.clunk .newsbox .about{padding:6px 12px}
+body.clunk .newsbox .foot{padding:8px 12px 10px}
 body.clunk .lyrics{-webkit-mask-image:none;mask-image:none;background:#fff;border:2px inset #fff;--lh:min(220px,30vh)}
 body.clunk .ll{font-size:12px;font-weight:400;color:#555;padding:2px 0;font-family:"Courier New",monospace}
 body.clunk .ll.cur{color:#000;font-weight:700;transform:none;background:#ffff99}
@@ -493,6 +519,9 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     </section>
 
     <section class="glass now">
+      <button class="lyrbtn favbtn" id="favBtn" hidden title="Favorite (F)" aria-label="Add to or remove from Favorites">
+        <svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg>
+      </button>
       <button class="lyrbtn" id="lyrBtn" hidden title="Show or hide lyrics (L)" aria-label="Show or hide lyrics">
         <svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg><span>LYRICS</span>
       </button>
@@ -501,7 +530,7 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
         <canvas id="viz"></canvas>
         <div class="disc"><img id="art" alt="" hidden></div>
       </div>
-      <div class="title" id="title">Lunar Music</div>
+      <div class="title" id="title" title="Show this song in the list">Lunar Music</div>
       <div class="artist" id="artist">Pick a song to begin</div>
 
       <div class="seek">
@@ -539,6 +568,13 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
 </div>
 
 <div class="clunk-only clunkstatus" id="clunkStatus">Ready.</div>
+<div class="news" id="news" hidden>
+  <div class="glass newsbox" role="dialog" aria-label="What is new">
+    <h2>Updated</h2>
+    <div class="about" id="newsBody"></div>
+    <div class="foot"><button class="pill" id="newsOk">Got it</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim"></div>
 <aside class="glass drawer" id="drawer" aria-label="Settings">
@@ -594,6 +630,9 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <div class="pathrow" style="margin-top:12px"><button class="pill" id="applyFolders">Use these folders</button></div>
     <div class="hint" id="folderHint"></div>
     </div>
+
+    <h3>Update log</h3>
+    <div class="about" id="about"></div>
 
     <div class="drawerfoot"><button class="pill quiet" id="resetAll">Reset look to Lunar default</button></div>
   </div>
@@ -655,13 +694,31 @@ function fetchLibrary(keep){
     buildQueue();
     mark();
     if(cur < 0 && !keep){
-      var last = indexOfFile(load('last', null));
-      if(last >= 0) select(last, false);
+      restoreLast();
     }
   }).catch(function(){
     listEl.innerHTML = ''; rows = []; heads = [];
     empty('Lunar Music lost contact with its engine', 'Close this window and open Lunar Music again.');
   });
+}
+/* What to show when the page starts: after a restart for an update, the song that was playing;
+   otherwise the last song from the previous session. On iPhone the app itself may still be
+   playing, so ask it first and leave the music alone if it is. */
+var helloPending = null, autoResume = false;
+function restoreLast(){
+  var stash = null;
+  try{ stash = JSON.parse(sessionStorage.getItem('lunarResume') || 'null'); sessionStorage.removeItem('lunarResume'); }catch(e){}
+  function fromStorage(){
+    var pos = stash || load('pos', null), last = indexOfFile(stash ? stash.file : load('last', null));
+    if(last < 0) return;
+    if(pos && pos.file === songs[last].file && typeof pos.t === 'number') resumeAt = pos;
+    autoResume = !!(stash && stash.playing);
+    select(last, false);
+  }
+  if(!NATIVE){ fromStorage(); return; }
+  helloPending = fromStorage;
+  send({ cmd: 'hello' });
+  setTimeout(function(){ var f = helloPending; helloPending = null; if(f) f(); }, 700);    // older app builds do not answer
 }
 function indexOfFile(f){ var i = fileIdx[f]; return typeof i === 'number' ? i : -1; }
 function empty(head, body, code){
@@ -679,7 +736,8 @@ var ICON = {
   cross: '<svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg>',
   play: '<svg viewBox="0 0 24 24"><path d="M8 4.5v15l12-7.5z"/></svg>',
   back: '<svg viewBox="0 0 24 24"><path d="M14.6 4.6 16 6l-6 6 6 6-1.4 1.4L7.2 12z"/></svg>',
-  list: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg>'
+  list: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zM4 9.7h11v2H4zM4 14.4h16v2H4zM4 19h9v2H4z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 20.5 4.6 13.4a4.9 4.9 0 0 1 0-7 4.8 4.8 0 0 1 6.9 0l.5.5.5-.5a4.8 4.8 0 0 1 6.9 0 4.9 4.9 0 0 1 0 7z"/></svg>'
 };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
 function iconBtn(cls, svg, title, fn){
@@ -693,7 +751,19 @@ function groupName(i){ return songs[i].artist || UNKNOWN; }
 function groupKey(i){ return groupName(i).trim().toLowerCase(); }
 function byTitle(a, b){ return songs[a].title.localeCompare(songs[b].title, undefined, { sensitivity: 'base' }) || a - b; }
 function allIdx(){ return songs.map(function(_, i){ return i; }); }
-function plById(id){ for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
+var favPl = { id: '__favs', name: 'Favorites', files: [], fixed: true };   // a built-in playlist that cannot be renamed or deleted
+function plById(id){ if(id === favPl.id) return favPl; for(var i = 0; i < playlists.length; i++) if(playlists[i].id === id) return playlists[i]; return null; }
+function isFav(file){ return favPl.files.indexOf(file) >= 0; }
+function updateFav(){
+  var b = $('favBtn'), on = cur >= 0 && songs[cur] && isFav(songs[cur].file);
+  b.hidden = cur < 0; b.classList.toggle('active', !!on);
+  b.title = (on ? 'Remove from Favorites' : 'Add to Favorites') + ' (F)';
+}
+function toggleFav(){
+  if(cur < 0) return;
+  var f = songs[cur].file;
+  if(isFav(f)){ removeFromPlaylist(favPl.id, f); toast('Removed from Favorites'); } else addToPlaylist(favPl, f);
+}
 
 /* The list of songs a view (or the play queue) is made of. */
 function listFor(d){
@@ -775,10 +845,11 @@ function renderPlaylists(frag){
   add.addEventListener('click', make);
   add.addEventListener('keydown', function(e){ if(e.key === 'Enter') make(); });
   frag.appendChild(add);
-  playlists.forEach(function(p){
+  [favPl].concat(playlists).forEach(function(p){
     var list = listFor({ type: 'playlist', id: p.id }), r = el('div', 'row plrow'); r.tabIndex = 0; r.dataset.name = p.name.toLowerCase();
     var t, first = list.length ? songs[list[0]] : null;
-    if(first && first.icon){ t = document.createElement('img'); t.loading = 'lazy'; t.alt = ''; t.src = iconUrl(first); }
+    if(p.fixed){ t = document.createElement('div'); t.innerHTML = ICON.heart; t.style.background = 'rgba(var(--accent-rgb),.16)'; t.firstChild.style.cssText = 'width:20px;height:20px;fill:var(--ink)'; }
+    else if(first && first.icon){ t = document.createElement('img'); t.loading = 'lazy'; t.alt = ''; t.src = iconUrl(first); }
     else t = document.createElement('div');
     t.className = 'thumb';
     var meta = el('div', 'meta'); meta.appendChild(el('div', 't', p.name)); meta.appendChild(el('div', 'a', plural(list.length)));
@@ -789,7 +860,7 @@ function renderPlaylists(frag){
     r.addEventListener('keydown', function(e){ if(e.key === 'Enter') open(); });
     frag.appendChild(r);
   });
-  if(!playlists.length){
+  if(!playlists.length && !favPl.files.length){
     var hint = el('div', 'empty'); hint.appendChild(el('strong', null, 'No playlists yet'));
     hint.appendChild(document.createTextNode('Create one here, or press + on any song.'));
     frag.appendChild(hint);
@@ -800,7 +871,7 @@ function renderPlaylist(frag, p){
   var desc = { type: 'playlist', id: p.id }, list = listFor(desc), head = el('div', 'plhead');
   head.appendChild(iconBtn('rowbtn', ICON.back, 'Back to playlists', function(){ openPl = null; renderList(); }));
   var name = el('input', 'plname'); name.type = 'text'; name.value = p.name; name.maxLength = 60; name.spellcheck = false;
-  name.setAttribute('aria-label', 'Playlist name');
+  name.setAttribute('aria-label', 'Playlist name'); name.readOnly = !!p.fixed;
   name.addEventListener('change', function(){ p.name = name.value.trim() || p.name; name.value = p.name; saveAll(); });
   name.addEventListener('keydown', function(e){ if(e.key === 'Enter') name.blur(); });
   head.appendChild(name);
@@ -809,12 +880,12 @@ function renderPlaylist(frag, p){
     if(del.dataset.sure){ playlists.splice(playlists.indexOf(p), 1); openPl = null; saveAll(); renderList(); toast('Deleted ' + p.name); }
     else { del.dataset.sure = '1'; del.textContent = 'Sure?'; setTimeout(function(){ delete del.dataset.sure; del.textContent = 'Delete'; }, 3000); }
   });
-  head.appendChild(del);
+  if(!p.fixed) head.appendChild(del);
   frag.appendChild(head);
   list.forEach(function(i){ frag.appendChild(songRow(i, desc, { removeFrom: p.id })); });
   if(!list.length){
     var hint = el('div', 'empty'); hint.appendChild(el('strong', null, 'This playlist is empty'));
-    hint.appendChild(document.createTextNode('Go to Songs or Artists and press + on a song to add it.'));
+    hint.appendChild(document.createTextNode(p.fixed ? 'Press the heart on the player to add the song that is playing.' : 'Go to Songs or Artists and press + on a song to add it.'));
     frag.appendChild(hint);
   }
 }
@@ -830,20 +901,68 @@ function newPlaylist(){
 function addToPlaylist(p, file){
   if(p.files.indexOf(file) >= 0){ toast('Already in ' + p.name); return; }
   p.files.push(file); saveAll(); toast('Added to ' + p.name);
-  playlistChanged(p);
+  playlistChanged(p); updateFav();
 }
 function removeFromPlaylist(id, file){
   var p = plById(id); if(!p) return;
   var k = p.files.indexOf(file); if(k >= 0) p.files.splice(k, 1);
-  saveAll(); playlistChanged(p);
+  saveAll(); playlistChanged(p); updateFav();
 }
 function playlistChanged(p){
   if(ctxDesc.type === 'playlist' && ctxDesc.id === p.id) buildQueue();    // keep what is playing in step
   if(view === 'playlists'){ var top = listEl.scrollTop; renderList(); listEl.scrollTop = top; }
 }
+/* ---------- update log ----------
+   Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
+   and the entries someone has not seen yet pop up once after the app updates itself. */
+var CHANGELOG = [
+  { v: '1.8', when: 'Nov 12', notes: [
+    'The app now restarts itself as soon as an update is found, then carries on with your song',
+    'This update log, in Settings and after each update',
+    'Favorites: press the heart on the player (or F); they collect in Playlists',
+    'Play next: in the + menu on any song',
+    'Tap the song title to find the playing song in the list',
+    'Reopening the app picks up the last song where you left it'
+  ] },
+  { v: '1.7', when: 'Nov 11', notes: [
+    'Automatic updates on iPhone and Windows',
+    'Six more themes: Harvest Moon, Sunset, Ocean, Forest, Sakura, Cyber'
+  ] },
+  { v: '1.6', when: 'Nov 11', notes: ['Clunk Mode: disguise the app as a homemade Python program'] },
+  { v: '1.5', when: 'Nov 11', notes: ['Playlists', 'Songs, Artists and Playlists tabs, with a play button for each artist'] },
+  { v: '1.4', when: 'Nov 11', notes: ['Lyrics from .lrc and .txt files or from inside the MP3; timed lyrics scroll with the song'] },
+  { v: '1.3', when: 'Nov 11', notes: ['Settings: themes, colors, glass, app icon and music folders', 'iPhone version, which keeps playing with the screen locked', 'Lunar Music shows as its own app on the taskbar (Windows)'] },
+  { v: '1.2', when: 'Nov 10', notes: ['One-file Windows program with its own moon icon'] },
+  { v: '1.0', when: 'Nov 10', notes: ['First version: plays your MP3s with their icons, search, shuffle and repeat'] }
+];
+var PAGE_VERSION = CHANGELOG[0].v;
+function logInto(box, entries){
+  box.innerHTML = '';
+  entries.forEach(function(e){
+    var d = el('div', 'ver'), h = el('div');
+    h.appendChild(el('b', null, 'Version ' + e.v)); h.appendChild(el('span', 'when', '  ·  ' + e.when + (e.v === PAGE_VERSION ? '  ·  installed' : '')));
+    var ul = el('ul'); e.notes.forEach(function(t){ ul.appendChild(el('li', null, t)); });
+    d.appendChild(h); d.appendChild(ul); box.appendChild(d);
+  });
+}
+function showAbout(){ logInto($('about'), CHANGELOG); }
+function showNews(seen){
+  var fresh = [];
+  for(var i = 0; i < CHANGELOG.length && CHANGELOG[i].v !== seen; i++) fresh.push(CHANGELOG[i]);
+  if(fresh.length === CHANGELOG.length) fresh = [CHANGELOG[0]];      // unknown older version: just show the newest
+  if(!fresh.length) return;
+  logInto($('newsBody'), fresh);
+  $('news').hidden = false; $('newsOk').focus();
+}
+function closeNews(){ $('news').hidden = true; }
+$('newsOk').addEventListener('click', closeNews);
+$('news').addEventListener('click', function(e){ if(e.target === $('news')) closeNews(); });
 function loadPlaylists(blob){
+  if(blob && Array.isArray(blob.favs)){ favPl.files = blob.favs.filter(function(f){ return typeof f === 'string'; }); updateFav(); }
+  if(blob && blob.seenVersion !== PAGE_VERSION){ showNews(blob.seenVersion); saveAll(); }   // only for people who already had settings saved
+  if(!blob) saveAll();    // first run: just note which version this is, so later updates can say what changed
   var src = blob && blob.playlists;
-  if(!Array.isArray(src)) return;
+  if(!Array.isArray(src)){ if(view === 'playlists' && songs.length) renderList(); return; }
   playlists = src.filter(function(p){ return p && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.files); })
     .map(function(p){ return { id: p.id, name: p.name, files: p.files.filter(function(f){ return typeof f === 'string'; }) }; });
   if(view === 'playlists' && songs.length) renderList();
@@ -855,8 +974,11 @@ function closeMenu(){ if(menuEl){ menuEl.remove(); menuEl = null; } }
 function openMenu(i, anchor){
   closeMenu();
   var file = songs[i].file, m = el('div', 'menu');
+  var pn = el('button'); pn.type = 'button'; pn.appendChild(el('i', null, '\u25B8')); pn.appendChild(el('span', null, 'Play next'));
+  pn.addEventListener('click', function(){ closeMenu(); playNext(i); });
+  m.appendChild(pn);
   m.appendChild(el('div', 'mh', 'Add to playlist'));
-  playlists.forEach(function(p){
+  [favPl].concat(playlists).forEach(function(p){
     var b = el('button'); b.type = 'button';
     b.appendChild(el('i', null, p.files.indexOf(file) >= 0 ? '✓' : '')); b.appendChild(el('span', null, p.name));
     b.addEventListener('click', function(){ closeMenu(); if(p.files.indexOf(file) >= 0) { removeFromPlaylist(p.id, file); toast('Removed from ' + p.name); } else addToPlaylist(p, file); });
@@ -903,12 +1025,35 @@ function buildQueue(){
     if(at > 0){ queue.splice(at, 1); queue.unshift(cur); }
   }
   qpos = cur >= 0 ? queue.indexOf(cur) : -1;
+  sendQueue();
+}
+function sendQueue(){
   if(NATIVE) send({ cmd: 'queue', files: queue.map(function(i){ return songs[i].file; }), pos: qpos, repeat: repeat });
+}
+/* Slot a song in right after the one that is playing. */
+function playNext(i){
+  if(cur < 0){ playFrom(ctxDesc, i); return; }
+  if(i === cur){ toast('Already playing'); return; }
+  var at = queue.indexOf(i);
+  if(at >= 0) queue.splice(at, 1);
+  qpos = queue.indexOf(cur);
+  queue.splice(qpos + 1, 0, i);
+  sendQueue();
+  toast(songs[i].title + ' will play next');
+}
+/* Find the playing song in the list. */
+function locate(){
+  if(cur < 0) return;
+  if(!rows[cur] || rows[cur].hidden){ view = 'songs'; openPl = null; save('tab', view); $('q').value = ''; renderList(); }
+  var r = rows[cur]; if(!r) return;
+  r.scrollIntoView({ block: 'center' });
+  r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash');
 }
 
 /* ---------- playback ---------- */
 function select(i, autoplay){
   if(i < 0 || i >= songs.length) return;
+  helloPending = null;                 // a song was chosen: no need to restore the last one any more
   cur = i; qpos = queue.indexOf(i);
   if(NATIVE){ audio.reset(); showSong(i); send({ cmd: 'playIndex', pos: qpos, autoplay: !!autoplay }); return; }
   audio.src = '/song?f=' + encodeURIComponent(songs[i].file);
@@ -924,7 +1069,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
-  showLyricsFor(i); clunkStatus();
+  showLyricsFor(i); clunkStatus(); updateFav();
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -964,11 +1109,23 @@ audio.addEventListener('error', function(){
   if(failures < Math.min(5, songs.length)) next(true);
   else { $('artist').textContent = 'These files could not be played'; }
 });
-audio.addEventListener('loadedmetadata', function(){ $('dur').textContent = fmt(audio.duration); });
+var resumeAt = null, posSaved = 0;
+audio.addEventListener('loadedmetadata', function(){
+  $('dur').textContent = fmt(audio.duration);
+  var r = resumeAt, go = autoResume; resumeAt = null; autoResume = false;      // pick up where things stopped, once
+  if(r && cur >= 0 && songs[cur].file === r.file && r.t > 2 && r.t < audio.duration - 5){
+    audio.currentTime = r.t;
+    $('seek').value = r.t / audio.duration * 1000; fill($('seek')); $('cur').textContent = fmt(r.t);
+  }
+  if(go) play();
+});
+function savePos(){ if(cur >= 0 && songs[cur]) save('pos', { file: songs[cur].file, t: Math.floor(audio.currentTime) }); }
+audio.addEventListener('pause', savePos);
 audio.addEventListener('timeupdate', function(){
   if(seeking || !audio.duration) return;
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
   $('cur').textContent = fmt(audio.currentTime);
+  if(Date.now() - posSaved > 5000){ posSaved = Date.now(); savePos(); }
   syncLyrics(false);
 });
 
@@ -1009,6 +1166,7 @@ $('q').addEventListener('input', filter);
 
 document.addEventListener('keydown', function(e){
   var tag = e.target.tagName;
+  if(!$('news').hidden){ if(e.key === 'Escape' || e.key === 'Enter') closeNews(); return; }
   if(e.key === 'Escape' && menuEl){ closeMenu(); return; }
   if(e.key === 'Escape' && document.body.classList.contains('settings-open')){ closeSettings(); return; }
   if(tag === 'INPUT' && (e.target.type === 'text' || e.target.classList.contains('path'))) return;
@@ -1026,6 +1184,7 @@ document.addEventListener('keydown', function(e){
   else if(k === 's' || k === 'S') setShuffle(!shuffle);
   else if(k === 'r' || k === 'R') cycleRepeat();
   else if(k === 'l' || k === 'L'){ if(lyr) toggleLyrics(); }
+  else if(k === 'f' || k === 'F') toggleFav();
   else if(k === '/'){ e.preventDefault(); $('q').focus(); }
 });
 
@@ -1272,6 +1431,8 @@ function syncLyrics(jump){
   if(el && Date.now() > lyrHold) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: jump ? 'auto' : 'smooth' });
 }
 $('lyrBtn').addEventListener('click', toggleLyrics);
+$('favBtn').addEventListener('click', toggleFav);
+$('title').addEventListener('click', locate);
 ['wheel', 'touchmove'].forEach(function(n){
   $('lyrics').addEventListener(n, function(){ lyrHold = Date.now() + 3500; }, { passive: true });   // let the user read ahead without being yanked back
 });
@@ -1337,7 +1498,8 @@ function post(body){
 function saveAll(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
-    var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; }); blob.playlists = playlists;
+    var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; });
+    blob.playlists = playlists; blob.favs = favPl.files; blob.seenVersion = PAGE_VERSION;
     post({ ui: blob }).catch(function(){});
   }, 350);
 }
@@ -1441,6 +1603,11 @@ window.lunarNative = function(ev){
   else if(ev.type === 'state'){ setPlaying(!!ev.playing); }
   else if(ev.type === 'tick'){ audio.setTime(ev.t); audio.level = ev.level || 0; if(isFinite(ev.d)) audio.duration = ev.d; audio.emit('timeupdate'); }
   else if(ev.type === 'sync'){
+    if(ev.hello){
+      var f = helloPending; helloPending = null;
+      if(!f) return;
+      if(!ev.file){ f(); return; }       // nothing loaded in the app: restore the last song as usual
+    }
     if(ev.file){ adopt(ev.file, ev.pos); audio.setTime(ev.t || 0); audio.duration = ev.d; audio.emit('loadedmetadata'); audio.emit('timeupdate'); }
     setPlaying(!!ev.playing);
   }
@@ -1457,18 +1624,23 @@ setRepeat(load('repeat', 'off'));
 fill($('seek'));
 sizeStars(); drawStars(0);
 requestAnimationFrame(frame);
-applyUI();
+applyUI(); showAbout();
 fetch('/api/settings').then(function(r){ return r.json(); }).then(function(s){ mergeUI(s.ui); loadPlaylists(s.ui); applyUI(); gotSettings(s); }).catch(function(){});
 fetchLibrary(false);
 /* Tells the engine the window is still open. On Windows the reply also says which version of this
    page is newest; if that is not this one, reload into it once the music is stopped. */
-var staleTold = false;
+var staleTold = false, restarting = false;
 function ping(){
   fetch('/api/ping').then(function(r){ return r.text(); }).then(function(t){
     var m = /^page:([0-9a-f]+)(;stale)?/.exec(t);
     if(!m) return;
     if(m[2] && !staleTold){ staleTold = true; toast('A bigger update is out. Get the newest Lunar Music.exe to install it.'); }
-    if(window.LUNAR_PAGE && m[1] !== window.LUNAR_PAGE && audio.paused && !document.body.classList.contains('settings-open')) location.reload();
+    if(window.LUNAR_PAGE && m[1] !== window.LUNAR_PAGE && !restarting && !document.body.classList.contains('settings-open')){
+      restarting = true;
+      toast('Update found. Restarting Lunar Music\u2026');
+      try{ if(cur >= 0) sessionStorage.setItem('lunarResume', JSON.stringify({ file: songs[cur].file, t: audio.currentTime, playing: !audio.paused })); }catch(e){}
+      setTimeout(function(){ location.reload(); }, 1600);
+    }
   }).catch(function(){});
 }
 ping(); setInterval(ping, 20000);
