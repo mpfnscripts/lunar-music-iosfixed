@@ -298,12 +298,43 @@ body.compact .thumb{width:32px;height:32px;border-radius:9px}
 body.compact .t{font-size:13.5px}
 body.compact .a{font-size:11.5px;margin-top:0}
 body.clunk .az{top:74px;right:10px}
+body.clunk .list.has-az{padding-right:24px}
 body.clunk .az span{color:#000}
 body.clunk .kv span{color:#333}
 body.clunk .kv b{color:#000}
 body.clunk .pop svg{fill:#a00000;filter:none}
 body.clunk .lyrtools{color:#000}
 body.native .az{top:104px}
+
+/* ---------- big song list (phones and narrow windows) ----------
+   The expand button hides the big player and leaves a slim "now playing" bar on top of the list. */
+.expbtn{display:none}
+.mini{display:none;align-items:center;gap:10px;margin:14px 14px 4px;padding:8px 8px 8px 10px;border-radius:18px;position:relative;overflow:hidden;
+  border:1px solid var(--line);background:linear-gradient(170deg,rgba(var(--accent-rgb),.2),rgba(var(--accent-rgb),.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.3);cursor:pointer}
+.mini .thumb{width:40px;height:40px}
+.mini .meta{flex:1;min-width:0}
+.mini .btn{width:40px;height:40px}
+.mini .btn svg{width:17px;height:17px}
+.mini .btn.mplay{color:var(--bg);background:radial-gradient(circle at 35% 26%,#fff 0%,color-mix(in srgb,var(--accent) 40%,#fff) 40%,color-mix(in srgb,var(--accent) 62%,#4c5478) 100%);border-color:rgba(255,255,255,.7)}
+.mini .mplay .ipause,body.playing .mini .mplay .iplay{display:none}
+body.playing .mini .mplay .ipause{display:block}
+.mini .mbar{position:absolute;left:0;bottom:0;height:2px;width:var(--mp,0%);background:var(--accent);box-shadow:0 0 8px rgba(var(--accent-rgb),.8)}
+body.native .expbtn{display:grid}
+body.native.libfull main{grid-template-rows:minmax(0,1fr)}
+body.native.libfull .now{display:none}
+body.native.libfull .mini{display:flex}
+body.native.libfull .az{top:178px}
+@media (max-width:820px){
+  .expbtn{display:grid}
+  body.libfull .now{display:none}
+  body.libfull .mini{display:flex}
+  body.libfull .library{max-height:none;height:calc(100vh - 92px)}
+  body.libfull .az{top:178px}
+}
+body.clunk .mini{background:#d9d9d9;border:2px outset #fff;box-shadow:none}
+body.clunk .mini .btn.mplay{background:#d9d9d9;color:#000;border:2px outset #fff}
+body.clunk .mini .mbar{background:#0a246a;box-shadow:none}
+body.clunk.libfull .az{top:120px}
 
 /* ---------- offline mode ---------- */
 .count.offl{color:#ffd9a8;border-color:rgba(255,200,140,.5)}
@@ -585,9 +616,24 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
           <input id="q" type="search" placeholder="Search your songs" autocomplete="off" spellcheck="false">
           <button type="button" class="qclear" id="qClear" hidden title="Clear search" aria-label="Clear search"><svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg></button>
         </label>
+        <button class="btn small expbtn" id="expBtn" title="Make the song list bigger" aria-label="Make the song list bigger">
+          <svg viewBox="0 0 24 24"><path d="M12 6.5 19.4 14 18 15.4l-6-6-6 6L4.6 14z"/></svg>
+        </button>
         <button class="btn small" id="refresh" title="Rescan music folder" aria-label="Rescan music folder">
       <svg viewBox="0 0 24 24"><path d="M12 5V2L7.5 6 12 10V7a5 5 0 1 1-4.9 6H5.07A7 7 0 1 0 12 5z"/></svg>
     </button>
+      </div>
+      <div class="mini" id="mini" title="Show the full player">
+        <img class="thumb" id="miniArt" alt="" draggable="false" hidden><div class="thumb" id="miniBlank"></div>
+        <div class="meta"><div class="t" id="miniTitle">Lunar Music</div><div class="a" id="miniArtist">Pick a song to begin</div></div>
+        <button class="btn mplay" id="miniPlay" title="Play or pause" aria-label="Play or pause">
+          <svg class="iplay" viewBox="0 0 24 24"><path d="M8 4.5v15l12-7.5z"/></svg>
+          <svg class="ipause" viewBox="0 0 24 24"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>
+        </button>
+        <button class="btn" id="miniNext" title="Next" aria-label="Next">
+          <svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5l10.5 7L4 19z"/></svg>
+        </button>
+        <div class="mbar"></div>
       </div>
       <div class="tabs" id="tabs">
         <button type="button" data-tab="songs">Songs</button>
@@ -1236,6 +1282,9 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.3', when: 'Nov 14', notes: [
+    'Bigger song list on iPhone: tap the arrow beside the search box. The player shrinks to a slim bar with play, pause and next; tap the bar to bring the full player back'
+  ] },
   { v: '2.2', when: 'Nov 13', notes: [
     'Sort the Songs tab by title, artist, most played or newest',
     'Shuffle buttons: Shuffle all, and on every artist and playlist',
@@ -1519,7 +1568,7 @@ function showSong(i){
   document.title = s.title + ' — Lunar Music';
   mark(); save('last', s.file);
   if(rows[i] && !rows[i].hidden) rows[i].scrollIntoView({ block: 'nearest' });
-  showLyricsFor(i); clunkStatus(); updateFav(); counted = null; queueChanged(); artColor(i);
+  showLyricsFor(i); clunkStatus(); updateFav(); counted = null; queueChanged(); artColor(i); updateMini();
   if(!NATIVE && 'mediaSession' in navigator){
     var meta = { title: s.title, artist: s.artist || 'Lunar Music' };
     if(s.icon) meta.artwork = [{ src: iconUrl(s), type: 'image/png' }];
@@ -1604,6 +1653,7 @@ audio.addEventListener('timeupdate', function(){
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
   $('cur').textContent = fmt(audio.currentTime);
   if(showRemain) $('dur').textContent = durText();
+  $('mini').style.setProperty('--mp', (audio.currentTime / audio.duration * 100) + '%');
   if(Date.now() - posSaved > 5000){ posSaved = Date.now(); savePos(); }
   if(cur >= 0 && counted !== songs[cur].file && !audio.paused && audio.currentTime > 5) notePlay(songs[cur].file);
   syncLyrics(false);
@@ -1626,6 +1676,33 @@ $('vol').addEventListener('input', function(){ setVol(this.value / 100); });
 $('mute').addEventListener('click', function(){
   if(audio.volume > 0){ lastVol = audio.volume; setVol(0); } else setVol(lastVol || 0.8);
 });
+
+/* ---------- big song list ---------- */
+var libFull = !!load('libfull', false);
+var ICON_UP = '<path d="M12 6.5 19.4 14 18 15.4l-6-6-6 6L4.6 14z"/>', ICON_DOWN = '<path d="M12 17.5 4.6 10 6 8.6l6 6 6-6L19.4 10z"/>';
+function setLibFull(on){
+  libFull = on; save('libfull', on);
+  document.body.classList.toggle('libfull', on);
+  var b = $('expBtn'), label = on ? 'Show the full player' : 'Make the song list bigger';
+  b.title = label; b.setAttribute('aria-label', label);
+  b.querySelector('svg').innerHTML = on ? ICON_DOWN : ICON_UP;
+  updateMini(); buildAZ();
+  if(rows[cur] && on) rows[cur].scrollIntoView({ block: 'nearest' });
+}
+function updateMini(){
+  var s = cur >= 0 ? songs[cur] : null;
+  $('miniTitle').textContent = s ? s.title : 'Lunar Music';
+  $('miniArtist').textContent = s ? (s.artist || ' ') : 'Pick a song to begin';
+  var has = !!(s && s.icon);
+  $('miniArt').hidden = !has; $('miniBlank').hidden = has;
+  if(has && $('miniArt').getAttribute('src') !== iconUrl(s)) $('miniArt').src = iconUrl(s);
+  if(!s) $('mini').style.setProperty('--mp', '0%');
+}
+$('expBtn').addEventListener('click', function(){ setLibFull(!libFull); });
+$('mini').addEventListener('click', function(){ setLibFull(false); });      // tapping the bar brings the full player back
+$('miniPlay').addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
+$('miniNext').addEventListener('click', function(e){ e.stopPropagation(); next(false); });
+setLibFull(libFull);
 
 function setShuffle(on){ shuffle = on; $('shuffle').classList.toggle('active', on); save('shuffle', on); buildQueue(); }
 function setRepeat(mode){
