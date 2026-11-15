@@ -261,7 +261,7 @@ body.playing .btn.play .ipause{display:block}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast.act.show{pointer-events:auto}
 .undo{margin-left:14px;background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0}
-body.clunk .undo{color:#0a246a}
+body.clunk .undo{color:var(--ck-sel)}
 
 /* ---------- narrow screens: nothing may push the page wider than the window ---------- */
 .app{grid-template-columns:minmax(0,1fr)}
@@ -299,11 +299,11 @@ body.compact .t{font-size:13.5px}
 body.compact .a{font-size:11.5px;margin-top:0}
 body.clunk .az{top:74px;right:10px}
 body.clunk .list.has-az{padding-right:24px}
-body.clunk .az span{color:#000}
-body.clunk .kv span{color:#333}
-body.clunk .kv b{color:#000}
-body.clunk .pop svg{fill:#a00000;filter:none}
-body.clunk .lyrtools{color:#000}
+body.clunk .az span{color:var(--ck-text)}
+body.clunk .kv span{color:var(--ck-text2)}
+body.clunk .kv b{color:var(--ck-text)}
+body.clunk .pop svg{fill:var(--ck-bad);filter:none}
+body.clunk .lyrtools{color:var(--ck-text)}
 body.native .az{top:104px}
 
 /* ---------- big song list (phones and narrow windows) ----------
@@ -331,14 +331,14 @@ body.native.libfull .az{top:178px}
   body.libfull .library{max-height:none;height:calc(100vh - 92px)}
   body.libfull .az{top:178px}
 }
-body.clunk .mini{background:#d9d9d9;border:2px outset #fff;box-shadow:none}
-body.clunk .mini .btn.mplay{background:#d9d9d9;color:#000;border:2px outset #fff}
-body.clunk .mini .mbar{background:#0a246a;box-shadow:none}
+body.clunk .mini{background:var(--ck-face);border:2px outset var(--ck-bevel);box-shadow:none}
+body.clunk .mini .btn.mplay{background:var(--ck-face);color:var(--ck-text);border:2px outset var(--ck-bevel)}
+body.clunk .mini .mbar{background:var(--ck-sel);box-shadow:none}
 body.clunk.libfull .az{top:120px}
 
 /* ---------- offline mode ---------- */
 .count.offl{color:#ffd9a8;border-color:rgba(255,200,140,.5)}
-body.clunk .count.offl{color:#a00000}
+body.clunk .count.offl{color:var(--ck-bad)}
 
 /* ---------- sync ---------- */
 .synccode{margin:10px 0 4px;padding:12px;border-radius:14px;border:1px solid var(--line-bright);background:rgba(5,8,22,.5);text-align:center}
@@ -346,9 +346,9 @@ body.clunk .count.offl{color:#a00000}
 .synccode span{font-size:12.5px;color:var(--ink-soft)}
 .syncsteps{margin:6px 0 0 18px;padding:0;font-size:12.5px;line-height:1.6;color:var(--ink-soft)}
 [hidden]{display:none!important}
-body.clunk .synccode{background:#fff;border:2px inset #fff}
-body.clunk .synccode b{font-size:18px;color:#000}
-body.clunk .syncsteps{color:#000;font-size:11px}
+body.clunk .synccode{background:var(--ck-field);border:2px inset var(--ck-bevel)}
+body.clunk .synccode b{font-size:18px;color:var(--ck-text)}
+body.clunk .syncsteps{color:var(--ck-text);font-size:11px}
 
 /* ---------- 1.9 extras ---------- */
 .upnext{margin-top:3px;font-size:12px;color:var(--ink-faint);min-height:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
@@ -359,10 +359,10 @@ body.clunk .syncsteps{color:#000;font-size:11px}
 .wrap{flex-wrap:wrap}
 .backup{display:block;width:100%;height:auto;min-height:74px;margin-top:8px;padding:8px 12px;resize:vertical;line-height:1.4}
 .more{padding:10px;text-align:center;font-size:12.5px;color:var(--ink-faint)}
-body.clunk .upnext{color:#333;font-size:11px}
-body.clunk .qclear{background:#d9d9d9;border:1px outset #fff;color:#000;width:16px;height:16px}
-body.clunk .pill.on{border-style:inset;background:#c3c3c3;box-shadow:none}
-body.clunk .more{color:#333;font-size:11px}
+body.clunk .upnext{color:var(--ck-text2);font-size:11px}
+body.clunk .qclear{background:var(--ck-face);border:1px outset var(--ck-bevel);color:var(--ck-text);width:16px;height:16px}
+body.clunk .pill.on{border-style:inset;background:var(--ck-press);box-shadow:none}
+body.clunk .more{color:var(--ck-text2);font-size:11px}
 body.native .tabs button{font-size:12px;letter-spacing:.03em}
 
 /* ---------- lyrics ---------- */
@@ -496,95 +496,108 @@ input[type=color]::-webkit-color-swatch{border:0}
 
 /* ---------- Clunk Mode: dress up as a homemade Python (Tkinter) app ---------- */
 .clunk-only{display:none}
-body.clunk{--ink:#000;--ink-soft:#333;--ink-faint:#555;--line:#808080;--line-bright:#fff;--accent:#0a246a;--accent-rgb:10,36,106;--bg:#d9d9d9;--radius:0px;
-  background:#d9d9d9;color:#000;font-family:Tahoma,"MS Sans Serif","Segoe UI",sans-serif;font-size:13px}
+body.clunk{
+  /* Clunk Mode: a plain, boxy, homemade-looking program in dark colors. The charcoal window is
+     tinted by the theme's main glow, and selections use the second glow. */
+  --ck-face:color-mix(in srgb,var(--accent) 12%,#2e3033);
+  --ck-light:color-mix(in srgb,var(--accent) 10%,#383a3d);
+  --ck-hover:color-mix(in srgb,var(--accent) 18%,#3c3f43);
+  --ck-press:color-mix(in srgb,var(--accent) 14%,#232528);
+  --ck-field:color-mix(in srgb,var(--accent) 5%,#1b1c1e);
+  --ck-sel:color-mix(in srgb,rgb(var(--accent2-rgb)) 78%,#151515);
+  --ck-mark:color-mix(in srgb,var(--accent) 30%,#4d4520);
+  --ck-bevel:#5f6368; --ck-edge:#4a4d52;
+  --ck-text:#e4e4e4; --ck-text2:#b4b4b4; --ck-text3:#8a8a8a;
+  --ck-ok:#8ad69a; --ck-bad:#ff9a8f;
+  --ink:var(--ck-text);--ink-soft:var(--ck-text2);--ink-faint:var(--ck-text3);--line:var(--ck-edge);--line-bright:var(--ck-bevel);--bg:var(--ck-face);--radius:0px;
+  background:var(--ck-face);color:var(--ck-text);font-family:Tahoma,"MS Sans Serif","Segoe UI",sans-serif;font-size:13px}
 body.clunk *{text-shadow:none!important;transition:none!important;animation:none!important;letter-spacing:0!important;border-radius:0!important}
 body.clunk #stars,body.clunk .bigmoon,body.clunk #viz,body.clunk .logo,body.clunk .eq,body.clunk .glass::before,body.clunk .disc::after{display:none!important}
 body.clunk .clunk-only{display:block}
 body.clunk span.clunk-only{display:inline}
 body.clunk .app{padding:0 8px 30px;gap:6px;grid-template-rows:auto auto minmax(0,1fr)}
-body.clunk .clunkbar{display:flex;gap:16px;margin:0 -8px;padding:3px 8px;background:#ececec;border-bottom:1px solid #a0a0a0}
+body.clunk .clunkbar{display:flex;gap:16px;margin:0 -8px;padding:3px 8px;background:var(--ck-light);border-bottom:1px solid var(--ck-edge)}
 body.clunk .clunkbar span:first-letter{text-decoration:underline}
-body.clunk .clunkstatus{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:3px 8px calc(3px + env(safe-area-inset-bottom));background:#d9d9d9;border-top:2px groove #fff;
+body.clunk .clunkstatus{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:3px 8px calc(3px + env(safe-area-inset-bottom));background:var(--ck-face);border-top:2px groove var(--ck-bevel);
   font-family:"Courier New",monospace;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.clunk header{gap:8px;min-height:28px}
-body.clunk .brand{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#000;font-size:13px;font-weight:400;text-transform:none}
+body.clunk .brand{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ck-text);font-size:13px;font-weight:400;text-transform:none}
 body.clunk .brand b{font-weight:400}
-body.clunk .count{background:none;border:0;padding:0;color:#000;text-transform:none;font-size:12px}
+body.clunk .count{background:none;border:0;padding:0;color:var(--ck-text);text-transform:none;font-size:12px}
 body.clunk main{gap:8px}
-body.clunk .glass{background:#d9d9d9;border:2px groove #fff;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.clunk .glass{background:var(--ck-face);border:2px groove var(--ck-bevel);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 body.clunk .btn,body.clunk .pill,body.clunk .lyrbtn,body.clunk .tabs button,body.clunk .rowbtn,body.clunk .theme{
-  background:#d9d9d9;border:2px outset #fff;box-shadow:none;color:#000;font-family:inherit;font-size:12px}
-body.clunk .btn:hover,body.clunk .pill:hover,body.clunk .btn.play:hover{box-shadow:none;transform:none;background:#e6e6e6}
-body.clunk .btn:active,body.clunk .pill:active,body.clunk .btn.small.active,body.clunk .lyrbtn.active,body.clunk .tabs button.on,body.clunk .theme.on{border-style:inset;background:#c3c3c3;box-shadow:none;color:#000}
+  background:var(--ck-face);border:2px outset var(--ck-bevel);box-shadow:none;color:var(--ck-text);font-family:inherit;font-size:12px}
+body.clunk .btn:hover,body.clunk .pill:hover,body.clunk .btn.play:hover{box-shadow:none;transform:none;background:var(--ck-hover)}
+body.clunk .btn:active,body.clunk .pill:active,body.clunk .btn.small.active,body.clunk .lyrbtn.active,body.clunk .tabs button.on,body.clunk .theme.on{border-style:inset;background:var(--ck-press);box-shadow:none;color:var(--ck-text)}
 body.clunk .btn{width:48px;height:30px}
-body.clunk .btn.small{width:38px;height:26px;color:#000}
-body.clunk .btn.play{width:64px;height:34px;border-color:#fff;color:#000}
+body.clunk .btn.small{width:38px;height:26px;color:var(--ck-text)}
+body.clunk .btn.play{width:64px;height:34px;border-color:var(--ck-bevel);color:var(--ck-text)}
 body.clunk .btn svg,body.clunk .btn.play svg{width:14px;height:14px}
 body.clunk .controls{gap:6px}
 body.clunk .libhead{padding:8px 8px 6px}
-body.clunk .search{height:24px;background:#fff;border:2px inset #fff;box-shadow:none;padding:0 6px}
+body.clunk .search{height:24px;background:var(--ck-field);border:2px inset var(--ck-bevel);box-shadow:none;padding:0 6px}
 body.clunk .search svg{display:none}
-body.clunk .search input{color:#000;font-family:inherit;font-size:12px}
-body.clunk .search input::placeholder{color:#777}
+body.clunk .search input{color:var(--ck-text);font-family:inherit;font-size:12px}
+body.clunk .search input::placeholder{color:var(--ck-text3)}
 body.clunk .tabs{padding:0 8px 6px;gap:2px}
 body.clunk .tabs button{height:24px}
-body.clunk .list{background:#fff;border:2px inset #fff;margin:0 8px 8px;padding:1px}
-body.clunk .row{padding:2px 4px;gap:6px;border:0;color:#000;box-shadow:none}
-body.clunk .row:hover{background:#e8e8e8}
-body.clunk .row.on{background:#0a246a;color:#fff;box-shadow:none}
+body.clunk .list{background:var(--ck-field);border:2px inset var(--ck-bevel);margin:0 8px 8px;padding:1px}
+body.clunk .row{padding:2px 4px;gap:6px;border:0;color:var(--ck-text);box-shadow:none}
+body.clunk .row:hover{background:var(--ck-hover)}
+body.clunk .row.on{background:var(--ck-sel);color:#fff;box-shadow:none}
 body.clunk .row.on .t,body.clunk .row.on .a,body.clunk .row.on .rowbtn{color:#fff}
-body.clunk .thumb{width:22px;height:22px;box-shadow:none;background:#c0c0c0;border:1px solid #808080}
+body.clunk .thumb{width:22px;height:22px;box-shadow:none;background:var(--ck-press);border:1px solid var(--ck-edge)}
 body.clunk .t{font-size:12px;font-weight:400;color:inherit}
-body.clunk .a{font-size:11px;margin:0;color:#555}
+body.clunk .a{font-size:11px;margin:0;color:var(--ck-text3)}
 body.clunk .rowbtn{width:20px;height:20px;border-width:1px;background:none;border-color:transparent}
 body.clunk .rowbtn svg{width:10px;height:10px}
 body.clunk .ghead{padding:6px 4px 2px}
-body.clunk .gname{font-size:12px;font-weight:700;text-transform:none;color:#000}
-body.clunk .plname{color:#000;background:#fff;border:2px inset #fff;font-size:12px;font-weight:400;height:24px}
-body.clunk .empty,body.clunk .empty strong{color:#000;font-size:12px}
-body.clunk .empty code{background:#fff;border:2px inset #fff;color:#000}
+body.clunk .gname{font-size:12px;font-weight:700;text-transform:none;color:var(--ck-text)}
+body.clunk .plname{color:var(--ck-text);background:var(--ck-field);border:2px inset var(--ck-bevel);font-size:12px;font-weight:400;height:24px}
+body.clunk .empty,body.clunk .empty strong{color:var(--ck-text);font-size:12px}
+body.clunk .empty code{background:var(--ck-field);border:2px inset var(--ck-bevel);color:var(--ck-text)}
 body.clunk .now{padding:12px 16px 14px}
 body.clunk .stage{width:min(220px,30vh)}
-body.clunk .disc{inset:6%;background:#c0c0c0;border:2px inset #fff;box-shadow:none!important}
+body.clunk .disc{inset:6%;background:var(--ck-press);border:2px inset var(--ck-bevel);box-shadow:none!important}
 body.clunk .title{font-size:15px;font-weight:700;margin-top:6px}
-body.clunk .artist{font-size:12px;color:#333}
-body.clunk .time{font-family:"Courier New",monospace;color:#000}
-body.clunk input[type=range]::-webkit-slider-runnable-track{height:8px;background:linear-gradient(90deg,#0a246a 0,#0a246a var(--p),#fff var(--p));border:2px inset #fff;box-shadow:none;box-sizing:content-box}
-body.clunk input[type=range]::-webkit-slider-thumb{width:11px;height:20px;margin-top:-6px;background:#d9d9d9;border:2px outset #fff;box-shadow:none}
-body.clunk .volume{color:#000}
+body.clunk .artist{font-size:12px;color:var(--ck-text2)}
+body.clunk .time{font-family:"Courier New",monospace;color:var(--ck-text)}
+body.clunk input[type=range]::-webkit-slider-runnable-track{height:8px;background:linear-gradient(90deg,var(--ck-sel) 0,var(--ck-sel) var(--p),var(--ck-field) var(--p));border:2px inset var(--ck-bevel);box-shadow:none;box-sizing:content-box}
+body.clunk input[type=range]::-webkit-slider-thumb{width:11px;height:20px;margin-top:-6px;background:var(--ck-face);border:2px outset var(--ck-bevel);box-shadow:none}
+body.clunk .volume{color:var(--ck-text)}
 body.clunk .lyrbtn{height:24px;padding:0 8px;top:8px;right:8px}
 body.clunk .lyrbtn.favbtn{right:auto;left:8px}
-body.clunk .about,body.clunk .about b{color:#000;font-size:11px}
-body.clunk .newsbox{background:#d9d9d9;border:2px outset #fff}
+body.clunk .about,body.clunk .about b{color:var(--ck-text);font-size:11px}
+body.clunk .newsbox{background:var(--ck-face);border:2px outset var(--ck-bevel)}
 body.clunk .newsbox h2{font-size:13px;font-weight:700;text-transform:none;padding:10px 12px 2px}
 body.clunk .newsbox .about{padding:6px 12px}
 body.clunk .newsbox .foot{padding:8px 12px 10px}
-body.clunk .lyrics{-webkit-mask-image:none;mask-image:none;background:#fff;border:2px inset #fff;--lh:min(220px,30vh)}
-body.clunk .ll{font-size:12px;font-weight:400;color:#555;padding:2px 0;font-family:"Courier New",monospace}
-body.clunk .ll.cur{color:#000;font-weight:700;transform:none;background:#ffff99}
+body.clunk .lyrics{-webkit-mask-image:none;mask-image:none;background:var(--ck-field);border:2px inset var(--ck-bevel);--lh:min(220px,30vh)}
+body.clunk .ll{font-size:12px;font-weight:400;color:var(--ck-text3);padding:2px 0;font-family:"Courier New",monospace}
+body.clunk .ll.cur{color:var(--ck-text);font-weight:700;transform:none;background:var(--ck-mark)}
 body.clunk .scrim{background:rgba(0,0,0,.25)}
-body.clunk .drawer{background:#d9d9d9;border:2px outset #fff;top:30px;bottom:30px}
+body.clunk .drawer{background:var(--ck-face);border:2px outset var(--ck-bevel);top:30px;bottom:30px}
 body.clunk .dhead h2{font-size:13px;font-weight:700;text-transform:none}
-body.clunk .dbody h3{font-size:12px;font-weight:700;text-transform:none;color:#000;margin:14px 0 4px;border-bottom:1px solid #a0a0a0}
+body.clunk .dbody h3{font-size:12px;font-weight:700;text-transform:none;color:var(--ck-text);margin:14px 0 4px;border-bottom:1px solid var(--ck-edge)}
 body.clunk .field{font-size:12px;min-height:26px}
 body.clunk .theme{font-size:11px;padding:4px}
 body.clunk .theme i{height:18px;box-shadow:none}
 body.clunk .theme i::after{display:none}
 body.clunk .sw{-webkit-appearance:auto;appearance:auto;width:14px;height:14px;background:none;border:0}
 body.clunk .sw::after{display:none}
-body.clunk input[type=color]{width:40px;height:20px;border:2px inset #fff}
+body.clunk input[type=color]{width:40px;height:20px;border:2px inset var(--ck-bevel)}
 body.clunk .pill{height:24px;padding:0 10px}
-body.clunk .pill.quiet,body.clunk .pill.danger{color:#000}
-body.clunk .path{background:#fff;border:2px inset #fff;color:#000;height:24px}
-body.clunk .hint{color:#333;font-size:11px}
-body.clunk .hint.ok{color:#006400}
-body.clunk .hint.bad{color:#a00000}
-body.clunk .iconprev{background:#fff;border:2px inset #fff}
-body.clunk .menu,body.clunk .toast{background:#d9d9d9;border:2px outset #fff;box-shadow:none;color:#000;font-size:12px}
-body.clunk .menu .mh{color:#000;text-transform:none;font-size:11px}
-body.clunk .menu button{color:#000;font-size:12px;padding:4px 8px}
-body.clunk .menu button:hover{background:#0a246a;color:#fff}
+body.clunk .pill.quiet,body.clunk .pill.danger{color:var(--ck-text)}
+body.clunk .path{background:var(--ck-field);border:2px inset var(--ck-bevel);color:var(--ck-text);height:24px}
+body.clunk .hint{color:var(--ck-text2);font-size:11px}
+body.clunk .hint.ok{color:var(--ck-ok)}
+body.clunk .hint.bad{color:var(--ck-bad)}
+body.clunk .iconprev{background:var(--ck-field);border:2px inset var(--ck-bevel)}
+body.clunk .menu,body.clunk .toast{background:var(--ck-face);border:2px outset var(--ck-bevel);box-shadow:none;color:var(--ck-text);font-size:12px}
+body.clunk .menu .mh{color:var(--ck-text);text-transform:none;font-size:11px}
+body.clunk .menu button{color:var(--ck-text);font-size:12px;padding:4px 8px}
+body.clunk .menu button:hover{background:var(--ck-sel);color:#fff}
 body.clunk .menu button:hover i{color:#fff}
 body.clunk.native .app{padding:env(safe-area-inset-top) 8px calc(30px + env(safe-area-inset-bottom))}
 body.clunk.native .drawer{top:calc(6px + env(safe-area-inset-top));bottom:calc(34px + env(safe-area-inset-bottom))}
@@ -786,6 +799,16 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
       <div class="hint" id="ipaStatus" style="margin-top:0">Checking…</div>
       <div class="pathrow wrap" style="margin-top:10px"><button class="pill" id="ipaGet">Get the newest iPhone app</button><button class="pill quiet" id="ipaOpen">Open in Sideloadly</button></div>
       <div class="hint" id="ipaHint"></div>
+    </div>
+
+    <div class="desk-only">
+      <h3>Discord</h3>
+      <label class="field"><span>Show what I'm playing on Discord</span><input type="checkbox" class="sw" id="tDisc"></label>
+      <label class="pathlabel" for="discId">Discord application ID</label>
+      <input class="path" id="discId" spellcheck="false" autocomplete="off" style="width:100%" placeholder="A long number from discord.com/developers">
+      <label class="field" style="margin-top:6px"><span>Look up cover art online</span><input type="checkbox" class="sw" id="tDiscCover"></label>
+      <div class="hint">Discord can only show pictures that are on the internet, so it shows the Lunar Music moon. With cover art on, Lunar Music asks Apple's music search for each song's cover by its title and artist; if it finds none, the moon is shown.</div>
+      <div class="hint" id="discStatus"></div>
     </div>
 
     <h3>Sync with Google Drive</h3>
@@ -1293,6 +1316,10 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.7', when: 'Nov 15', notes: [
+    'Clunk Mode is now dark, and follows your theme: each theme gives it its own tint, and the selection bar takes the second glow color',
+    'Windows: show what you are playing on your Discord profile: the song, the artist, a progress bar, and the moon or the song\'s cover art (Settings > Discord; needs the newest Lunar Music.exe)'
+  ] },
   { v: '2.6', when: 'Nov 14', notes: [
     'Windows: Settings > iPhone app downloads the newest iPhone app into the folder above your songs folder, then opens Sideloadly with the file ready to drag in (needs the newest Lunar Music.exe)',
     'The PC tells you when your iPhone needs a new install to get a feature'
@@ -1416,6 +1443,7 @@ $('news').addEventListener('click', function(e){ if(e.target === $('news')) clos
 function loadPlaylists(blob){
   if(blob && Array.isArray(blob.favs)){ favPl.files = blob.favs.filter(function(f){ return typeof f === 'string'; }); updateFav(); }
   loadSync(blob && blob.sync);
+  loadDiscord(blob && blob.discord);
   if(blob && blob.seen && typeof blob.seen === 'object'){ seen = {}; Object.keys(blob.seen).forEach(function(f){ if(typeof blob.seen[f] === 'number') seen[f] = blob.seen[f]; }); }
   if(blob && blob.seenInit === true) seenInit = true;
   if(blob && blob.lyrOff && typeof blob.lyrOff === 'object'){ lyrOff = {}; Object.keys(blob.lyrOff).forEach(function(f){ if(typeof blob.lyrOff[f] === 'number') lyrOff[f] = blob.lyrOff[f]; }); }
@@ -1669,6 +1697,48 @@ audio.addEventListener('loadedmetadata', function(){
 });
 function savePos(){ if(cur >= 0 && songs[cur]) save('pos', { file: songs[cur].file, t: Math.floor(audio.currentTime) }); }
 audio.addEventListener('pause', savePos);
+
+/* ---------- Discord (Windows) ----------
+   The engine talks to the Discord app on this PC; the page just tells it what is playing. */
+var DISC_OK = false, disc = { on: false, id: '', cover: false }, discTimer = 0;
+function loadDiscord(src){
+  if(src && typeof src === 'object'){
+    disc.on = src.on === true; disc.cover = src.cover === true;
+    disc.id = typeof src.id === 'string' ? src.id.replace(/\D/g, '').slice(0, 25) : '';
+  }
+  discUI(); tellDiscord();
+}
+function discUI(){
+  $('tDisc').checked = disc.on; $('tDiscCover').checked = disc.cover;
+  if(document.activeElement !== $('discId')) $('discId').value = disc.id;
+  ['tDisc', 'tDiscCover', 'discId'].forEach(function(id){ $(id).disabled = !DISC_OK; });
+  if(!DISC_OK) hint('discStatus', 'Needs the newest Lunar Music.exe on this PC.', 'bad');
+}
+function tellDiscord(){                       // a moment's pause collects quick changes into one
+  if(NATIVE || !DISC_OK) return;
+  clearTimeout(discTimer);
+  discTimer = setTimeout(function(){
+    var s = cur >= 0 ? songs[cur] : null;
+    fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      on: disc.on, id: disc.id, cover: disc.cover, file: s ? s.file : '', title: s ? s.title : '', artist: s ? s.artist : '',
+      playing: !!s && !audio.paused, pos: audio.currentTime || 0, dur: isFinite(audio.duration) ? audio.duration : 0
+    }) }).then(function(r){ return r.json(); }).then(discStatus).catch(function(){});
+  }, 300);
+}
+function discStatus(d){
+  if(!DISC_OK || !d) return;
+  var t = { off: disc.on ? 'Add your Discord application ID above to start.' : 'Off.',
+            connecting: 'Connecting to Discord\u2026',
+            connected: 'Showing on Discord' + (d.user ? ' for ' + d.user : '') + '.',
+            'no-discord': 'Discord does not seem to be open on this PC. Lunar Music keeps trying every few seconds.',
+            'bad-id': 'Discord did not accept that application ID. Copy it again from the developer portal.' }[d.state] || '';
+  hint('discStatus', t, d.state === 'connected' ? 'ok' : d.state === 'no-discord' || d.state === 'bad-id' ? 'bad' : '');
+}
+['play', 'pause', 'seeked', 'loadedmetadata', 'ended'].forEach(function(n){ audio.addEventListener(n, tellDiscord); });
+$('tDisc').addEventListener('change', function(){ disc.on = this.checked; saveAll(); tellDiscord(); });
+$('tDiscCover').addEventListener('change', function(){ disc.cover = this.checked; saveAll(); tellDiscord(); });
+$('discId').addEventListener('change', function(){ disc.id = this.value.replace(/\D/g, '').slice(0, 25); this.value = disc.id; saveAll(); tellDiscord(); });
+setInterval(function(){ if(DISC_OK && document.body.classList.contains('settings-open')) fetch('/api/presence').then(function(r){ return r.json(); }).then(discStatus).catch(function(){}); }, 3000);
 audio.addEventListener('timeupdate', function(){
   if(seeking || !audio.duration) return;
   $('seek').value = audio.currentTime / audio.duration * 1000; fill($('seek'));
@@ -2166,7 +2236,7 @@ function saveAll(){
     var blob = {}; Object.keys(ui).forEach(function(k){ blob[k] = ui[k]; });
     blob.playlists = playlists; blob.favs = favPl.files; blob.seenVersion = PAGE_VERSION;
     blob.plays = plays; blob.recent = recentPl.files; blob.sync = syncState;
-    blob.seen = seen; blob.seenInit = seenInit; blob.lyrOff = lyrOff;
+    blob.seen = seen; blob.seenInit = seenInit; blob.lyrOff = lyrOff; blob.discord = disc;
     post({ ui: blob }).catch(function(){});
   }, 350);
 }
@@ -2207,7 +2277,7 @@ function applyIcon(){
   $('favicon').href = customIcon ? url : MOON_FAVICON;
 }
 function gotSettings(s){
-  if(Array.isArray(s.caps)){ IPA_OK = s.caps.indexOf('ipa') >= 0; ipaRefresh(false, true); NOWLYR_OK = s.caps.indexOf('nowLyrics') >= 0; carLyrUI(); sendLyricsMode(); HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
+  if(Array.isArray(s.caps)){ DISC_OK = s.caps.indexOf('discord') >= 0; discUI(); tellDiscord(); IPA_OK = s.caps.indexOf('ipa') >= 0; ipaRefresh(false, true); NOWLYR_OK = s.caps.indexOf('nowLyrics') >= 0; carLyrUI(); sendLyricsMode(); HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
   customIcon = !!s.customIcon; iconVersion = s.iconVersion || 0;
   $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || ''; $('pLyrics').value = s.lyrics || '';
   applyIcon();
