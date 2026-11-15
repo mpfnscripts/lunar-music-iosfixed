@@ -744,6 +744,10 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
     <label class="field"><span>Moon in the sky</span><input type="checkbox" class="sw" id="tMoon"></label>
     <label class="field"><span>Ring of light around artwork</span><input type="checkbox" class="sw" id="tRing"></label>
     <label class="field"><span>Match colors to the artwork</span><input type="checkbox" class="sw" id="tArt"></label>
+    <div class="ios-only">
+      <label class="field"><span>Lyrics on the lock screen and CarPlay</span><input type="checkbox" class="sw" id="tCarLyr"></label>
+      <div class="hint" id="carLyrHint">For songs with timed lyrics, shows the line being sung in place of the artist. Off by default: changing text on a car screen pulls the driver's eyes off the road, so it is best when someone else is driving.</div>
+    </div>
 
     <h3>App icon</h3>
     <div class="iconrow">
@@ -871,7 +875,7 @@ function iconUrl(s){ return s.icon ? '/icon?f=' + encodeURIComponent(s.icon) : '
 function fetchLibrary(keep){
   return fetch('/api/library').then(function(r){ return r.json(); }).then(function(lib){
     var playingFile = cur >= 0 ? songs[cur].file : null;
-    lyrCache = {};
+    lyrCache = {}; nowSent = {};
     songs = lib.songs || [];
     fileIdx = {}; baseIdx = {}; libInfo = lib;
     songs.forEach(function(s, i){ var d = describe(s); s.title = d.title; s.artist = d.artist; s.hay = (s.name + ' ' + s.folder).toLowerCase(); fileIdx[s.file] = i;
@@ -1216,7 +1220,7 @@ function updateNext(){
 }
 /* Called whenever the queue or the playing song changes. */
 function queueChanged(){
-  updateNext();
+  updateNext(); preloadNowLyrics();
   if(view === 'queue'){ var top = listEl.scrollTop; renderList(); listEl.scrollTop = top; }
 }
 
@@ -1282,6 +1286,9 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
+  { v: '2.5', when: 'Nov 14', notes: [
+    'iPhone: Lyrics on the lock screen and CarPlay (Settings, off by default). For songs with timed lyrics, the line being sung shows in place of the artist. Needs the newest iPhone build'
+  ] },
   { v: '2.4', when: 'Nov 14', notes: [
     'Windows: closing the window leaves Lunar Music in the hidden icons on the taskbar. Click the icon to open the player again, or right-click it and choose Quit to end it completely (needs the newest Lunar Music.exe)'
   ] },
@@ -1976,6 +1983,7 @@ function setLyrics(res){
     });
   }
   $('lyrBtn').hidden = !res;
+  if(res && res.synced && cur >= 0 && songs[cur]) sendNowLyrics(songs[cur].file, res);
   lyricsMode();
 }
 function lyricsMode(){
@@ -1987,6 +1995,37 @@ function lyricsMode(){
   lyrShiftText(); buildAZ();
   if(on){ $('lyrics').scrollTop = 0; syncLyrics(true); }
 }
+/* ---------- lyrics on the lock screen and CarPlay (iPhone) ----------
+   The app does the timing itself (the page sleeps while the phone is locked), so the page just
+   hands it the timed lines for the playing song and the next few, plus the on/off switch. */
+var NOWLYR_OK = false, nowSent = {};
+function carLyrUI(){
+  var t = $('tCarLyr'); t.checked = !!ui.carLyrics; t.disabled = !NOWLYR_OK;
+  if(!NOWLYR_OK) hint('carLyrHint', 'Needs the newest iPhone build of Lunar Music. Install the latest IPA to use this.', 'bad');
+}
+function sendLyricsMode(){
+  if(!NATIVE || !NOWLYR_OK) return;
+  send({ cmd: 'lyricsMode', on: !!ui.carLyrics, offsets: lyrOff });
+  preloadNowLyrics();
+}
+function sendNowLyrics(file, res){
+  if(!NATIVE || !NOWLYR_OK || !ui.carLyrics || !res || !res.synced || nowSent[file]) return;
+  nowSent[file] = true;
+  send({ cmd: 'lyricsFor', file: file, lines: res.lines.map(function(l){ return [l.t, l.text]; }) });
+}
+function preloadNowLyrics(){            // the next few songs too, in case the phone gets locked
+  if(!NATIVE || !NOWLYR_OK || !ui.carLyrics || cur < 0) return;
+  var at = queue.indexOf(cur), list = at < 0 ? [cur] : queue.slice(at, at + 4);
+  list.forEach(function(i){
+    var s = songs[i]; if(!s || nowSent[s.file]) return;
+    loadLyrics(s).then(function(res){ sendNowLyrics(s.file, res); });
+  });
+}
+$('tCarLyr').addEventListener('change', function(){
+  ui.carLyrics = this.checked; changed(); sendLyricsMode();
+  if(this.checked) toast('Lyrics will show on the lock screen and in CarPlay');
+});
+
 /* Timed lyrics that run early or late can be nudged per song; the nudge is remembered. */
 var lyrOff = {};
 function lyrShift(){ return cur >= 0 && songs[cur] ? (lyrOff[songs[cur].file] || 0) : 0; }
@@ -1995,7 +2034,7 @@ function nudgeLyrics(by){
   if(cur < 0) return;
   var f = songs[cur].file, o = Math.round(((lyrOff[f] || 0) + by) * 10) / 10;
   if(o) lyrOff[f] = o; else delete lyrOff[f];
-  saveAll(); lyrShiftText(); syncLyrics(true);
+  saveAll(); lyrShiftText(); syncLyrics(true); sendLyricsMode();
 }
 $('lyrEarly').addEventListener('click', function(){ nudgeLyrics(0.5); });
 $('lyrLate').addEventListener('click', function(){ nudgeLyrics(-0.5); });
@@ -2035,7 +2074,7 @@ var THEMES = {
 };
 var DEFAULT_UI = { theme: 'lunar', accent: '#b8c6ff', accent2: '#6054be', bg: '#0a0f26', ink: '#eef1fb',
                    blur: 26, tint: 100, radius: 26, square: false, stars: true, moon: true, ring: true, clunk: false,
-                   compact: false, lyrSize: 100, artColor: false };
+                   compact: false, lyrSize: 100, artColor: false, carLyrics: false };
 var ui = {}, vizRGB = '226,233,255', ringShown = true, saveTimer = 0, customIcon = false, iconVersion = 0;
 var MOON_FAVICON = $('favicon').getAttribute('href');
 Object.keys(DEFAULT_UI).forEach(function(k){ ui[k] = DEFAULT_UI[k]; });
@@ -2157,7 +2196,7 @@ function applyIcon(){
   $('favicon').href = customIcon ? url : MOON_FAVICON;
 }
 function gotSettings(s){
-  if(Array.isArray(s.caps)){ HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
+  if(Array.isArray(s.caps)){ NOWLYR_OK = s.caps.indexOf('nowLyrics') >= 0; carLyrUI(); sendLyricsMode(); HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
   customIcon = !!s.customIcon; iconVersion = s.iconVersion || 0;
   $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || ''; $('pLyrics').value = s.lyrics || '';
   applyIcon();

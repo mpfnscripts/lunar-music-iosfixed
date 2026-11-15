@@ -19,6 +19,12 @@ final class Player: NSObject, AVAudioPlayerDelegate {
     private var currentFile: String?
     private var artwork: MPMediaItemArtwork?
 
+    // Lyrics on the lock screen and CarPlay (see NowLyrics.swift)
+    private let lyrics = LyricLines()
+    private var currentLines: [(Double, String)] = []
+    private var lyricLine: String?
+    private var lyricIndex = -1
+
     override init() {
         super.init()
         let session = AVAudioSession.sharedInstance()
@@ -56,6 +62,9 @@ final class Player: NSObject, AVAudioPlayerDelegate {
         position = p
         let file = queue[p]
         currentFile = file
+        currentLines = lyrics.lines(for: file)
+        lyricLine = nil
+        lyricIndex = -1
         stopTimer()
         audio?.stop()
 
@@ -122,6 +131,8 @@ final class Player: NSObject, AVAudioPlayerDelegate {
     func seek(_ t: Double) {
         guard let a = audio else { return }
         a.currentTime = max(0, min(t, a.duration))
+        lyricIndex = -2
+        updateLyricLine()
         updateNowPlaying()
     }
 
@@ -189,7 +200,52 @@ final class Player: NSObject, AVAudioPlayerDelegate {
         timer = nil
     }
 
+    // MARK: Lyrics line
+
+    func setLyricsMode(on: Bool, offsets: [String: Double]) {
+        lyrics.enabled = on
+        lyrics.offsets = offsets
+        lyricIndex = -2
+        updateLyricLine()
+    }
+
+    func receiveLyrics(file: String, lines: [(Double, String)]) {
+        lyrics.store(file: file, lines: lines)
+        if file == currentFile {
+            currentLines = lines
+            lyricIndex = -2
+            updateLyricLine()
+        }
+    }
+
+    /// Puts the line being sung into the Now Playing info when it changes.
+    private func updateLyricLine() {
+        guard lyrics.enabled, let a = audio, let file = currentFile, !currentLines.isEmpty else {
+            if lyricLine != nil {
+                lyricLine = nil
+                lyricIndex = -1
+                updateNowPlaying()
+            }
+            return
+        }
+        let t = a.currentTime + 0.2 + (lyrics.offsets[file] ?? 0)
+        var idx = -1
+        for (i, line) in currentLines.enumerated() {
+            if line.0 <= t { idx = i } else { break }
+        }
+        if idx == lyricIndex { return }
+        lyricIndex = idx
+        if idx < 0 {
+            lyricLine = nil
+        } else {
+            let text = currentLines[idx].1
+            lyricLine = text.isEmpty ? "\u{266A}" : text
+        }
+        updateNowPlaying()
+    }
+
     private func tick() {
+        updateLyricLine()   // runs even while the phone is locked
         // The page only needs progress while it is on screen.
         guard let a = audio, UIApplication.shared.applicationState == .active else { return }
         a.updateMeters()
@@ -249,7 +305,12 @@ final class Player: NSObject, AVAudioPlayerDelegate {
             MPNowPlayingInfoPropertyElapsedPlaybackTime: finite(a.currentTime),
             MPNowPlayingInfoPropertyPlaybackRate: a.isPlaying ? 1.0 : 0.0,
         ]
-        if !artist.isEmpty { info[MPMediaItemPropertyArtist] = artist }
+        if let line = lyricLine {
+            info[MPMediaItemPropertyArtist] = line              // the lyric takes the artist's place
+            if !artist.isEmpty { info[MPMediaItemPropertyAlbumTitle] = artist }
+        } else if !artist.isEmpty {
+            info[MPMediaItemPropertyArtist] = artist
+        }
         if let art = artwork { info[MPMediaItemPropertyArtwork] = art }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }

@@ -286,7 +286,7 @@ final class AppSchemeHandler: NSObject, WKURLSchemeHandler {
             "songsFound": true, "iconsFound": true,
             "customIcon": FileManager.default.fileExists(atPath: Library.customIcon.path),
             "iconVersion": defaults.integer(forKey: "iconVersion"),
-            "caps": ["sync"],
+            "caps": ["sync", "nowLyrics"],
         ]
     }
 
@@ -389,6 +389,22 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler {
                 var event: [String: Any] = ["type": "host", "id": id, "ok": ok]
                 event[ok ? "result" : "error"] = value
                 self?.send(event)
+            }
+        case "lyricsMode":
+            var offsets: [String: Double] = [:]
+            for (file, value) in (body["offsets"] as? [String: Any]) ?? [:] {
+                if let n = value as? NSNumber { offsets[file] = n.doubleValue }
+            }
+            player.setLyricsMode(on: (body["on"] as? Bool) ?? false, offsets: offsets)
+        case "lyricsFor":
+            if let file = body["file"] as? String {
+                var lines: [(Double, String)] = []
+                for item in (body["lines"] as? [[Any]]) ?? [] {
+                    if item.count == 2, let t = item[0] as? NSNumber, let text = item[1] as? String {
+                        lines.append((t.doubleValue, text))
+                    }
+                }
+                player.receiveLyrics(file: file, lines: lines)
             }
         case "hello":
             // A freshly loaded page asking what is going on (for example after an update restart).
