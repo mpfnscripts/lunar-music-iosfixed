@@ -180,13 +180,26 @@ enum PageStore {
         return Int(text[marker.upperBound...].prefix(while: { $0.isNumber }))
     }
 
+    /// The version a page says it is ("2.8" -> 2008). Pages from before the mark count as 0,
+    /// so they are never treated as newer than one that has it.
+    static func version(_ data: Data) -> Int {
+        guard let text = String(data: data, encoding: .utf8),
+              let marker = text.range(of: "name=\"lunar-version\" content=\"") else { return 0 }
+        let value = text[marker.upperBound...].prefix(while: { $0 != "\"" })
+        let parts = value.split(separator: ".", maxSplits: 1)
+        let major = parts.count > 0 ? Int(parts[0]) ?? 0 : 0
+        let minor = parts.count > 1 ? Int(parts[1]) ?? 0 : 0
+        return major * 1000 + minor
+    }
+
     /// The page to show: a downloaded one if it was fetched while this same build was installed,
     /// otherwise the copy that came inside the app (so reinstalling a newer IPA always wins).
     static func current() -> Data? {
         guard let shipped = bundled() else { return nil }
         if UserDefaults.standard.string(forKey: "pageForBuild") == sha(shipped),
            let cached = try? Data(contentsOf: cacheFile),
-           let level = requiredLevel(cached), level <= nativeLevel {
+           let level = requiredLevel(cached), level <= nativeLevel,
+           version(cached) >= version(shipped) {
             return cached
         }
         return shipped
@@ -199,7 +212,8 @@ enum PageStore {
             var result = Result.none
             if let data = data, (response as? HTTPURLResponse)?.statusCode == 200,
                let level = requiredLevel(data), let shipped = bundled(), let showing = current(),
-               sha(data) != sha(showing) {
+               sha(data) != sha(showing),
+               version(data) > version(showing) {    // GitHub can briefly serve an old copy; never go backwards
                 if level > nativeLevel {
                     result = .needsReinstall
                 } else if (try? data.write(to: cacheFile, options: .atomic)) != nil {
