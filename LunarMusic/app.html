@@ -781,6 +781,13 @@ body.clunk.native .path,body.clunk.native .search input,body.clunk.native .plnam
       <div class="hint" id="sleepHint"></div>
     </div>
 
+    <div class="desk-only">
+      <h3>iPhone app</h3>
+      <div class="hint" id="ipaStatus" style="margin-top:0">Checking…</div>
+      <div class="pathrow wrap" style="margin-top:10px"><button class="pill" id="ipaGet">Get the newest iPhone app</button><button class="pill quiet" id="ipaOpen">Open in Sideloadly</button></div>
+      <div class="hint" id="ipaHint"></div>
+    </div>
+
     <h3>Sync with Google Drive</h3>
     <div id="syncOld" class="hint" style="margin-top:0">Sync needs the newest Lunar Music program on this device (Windows exe v9 or later, or the latest iPhone build).</div>
     <div id="syncSetup" hidden>
@@ -1286,7 +1293,11 @@ function playlistChanged(p){
    Newest first. PAGE_VERSION is what this copy of the page is; the log is shown in Settings,
    and the entries someone has not seen yet pop up once after the app updates itself. */
 var CHANGELOG = [
-  { v: '2.5', when: 'Nov 14', notes: [
+  { v: '2.6', when: 'Nov 14', notes: [
+    'Windows: Settings > iPhone app downloads the newest iPhone app into the folder above your songs folder, then opens Sideloadly with the file ready to drag in (needs the newest Lunar Music.exe)',
+    'The PC tells you when your iPhone needs a new install to get a feature'
+  ] },
+  { v: '2.5', ipa: true, when: 'Nov 14', notes: [
     'iPhone: Lyrics on the lock screen and CarPlay (Settings, off by default). For songs with timed lyrics, the line being sung shows in place of the artist. Needs the newest iPhone build'
   ] },
   { v: '2.4', when: 'Nov 14', notes: [
@@ -1321,7 +1332,7 @@ var CHANGELOG = [
     'Offline mode: when GitHub cannot be reached the app shows an Offline badge, keeps playing your music, and pauses update checks and sync until the connection is back',
     'Settings shows whether you are connected'
   ] },
-  { v: '2.0', when: 'Nov 12', notes: [
+  { v: '2.0', ipa: true, when: 'Nov 12', notes: [
     'Sync with Google Drive: your PC sends its songs, icons and lyrics to a private folder in your own Drive, and your iPhone downloads them',
     'Needs the newest Windows exe and iPhone build, plus a one-time Google setup (Settings)'
   ] },
@@ -1352,7 +1363,7 @@ var CHANGELOG = [
   { v: '1.6', when: 'Nov 11', notes: ['Clunk Mode: disguise the app as a homemade Python program'] },
   { v: '1.5', when: 'Nov 11', notes: ['Playlists', 'Songs, Artists and Playlists tabs, with a play button for each artist'] },
   { v: '1.4', when: 'Nov 11', notes: ['Lyrics from .lrc and .txt files or from inside the MP3; timed lyrics scroll with the song'] },
-  { v: '1.3', when: 'Nov 11', notes: ['Settings: themes, colors, glass, app icon and music folders', 'iPhone version, which keeps playing with the screen locked', 'Lunar Music shows as its own app on the taskbar (Windows)'] },
+  { v: '1.3', ipa: true, when: 'Nov 11', notes: ['Settings: themes, colors, glass, app icon and music folders', 'iPhone version, which keeps playing with the screen locked', 'Lunar Music shows as its own app on the taskbar (Windows)'] },
   { v: '1.2', when: 'Nov 10', notes: ['One-file Windows program with its own moon icon'] },
   { v: '1.0', when: 'Nov 10', notes: ['First version: plays your MP3s with their icons, search, shuffle and repeat'] }
 ];
@@ -2196,7 +2207,7 @@ function applyIcon(){
   $('favicon').href = customIcon ? url : MOON_FAVICON;
 }
 function gotSettings(s){
-  if(Array.isArray(s.caps)){ NOWLYR_OK = s.caps.indexOf('nowLyrics') >= 0; carLyrUI(); sendLyricsMode(); HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
+  if(Array.isArray(s.caps)){ IPA_OK = s.caps.indexOf('ipa') >= 0; ipaRefresh(false, true); NOWLYR_OK = s.caps.indexOf('nowLyrics') >= 0; carLyrUI(); sendLyricsMode(); HOST_OK = s.caps.indexOf('sync') >= 0; syncUI(); if(HOST_OK) setTimeout(function(){ runSync(false); }, 1500); }
   customIcon = !!s.customIcon; iconVersion = s.iconVersion || 0;
   $('pSongs').value = s.songs || ''; $('pIcons').value = s.icons || ''; $('pLyrics').value = s.lyrics || '';
   applyIcon();
@@ -2249,7 +2260,70 @@ function showStats(){
    ['Songs played', total], ['Most played song', best ? best + ' (' + bestN + ')' : 'Nothing yet'], ['Most played artist', topA ? topA + ' (' + topAN + ')' : 'Nothing yet']
   ].forEach(function(r){ var d = el('div', 'kv'); d.appendChild(el('span', null, r[0])); d.appendChild(el('b', null, String(r[1]))); box.appendChild(d); });
 }
-function openSettings(){ showStats(); document.body.classList.add('settings-open'); }
+/* ---------- iPhone app (Windows): fetch the newest IPA and hand it to Sideloadly ---------- */
+var IPA_OK = false, ipaState = null, ipaTold = false, ipaWorking = false;
+function vnum(v){ var p = String(v || '0').split('.'); return (+p[0] || 0) * 1000 + (+p[1] || 0); }
+function when(iso){ var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+function ipaNeeds(){                   // features in the update log that only arrive with a new iPhone install
+  var have = ipaState && ipaState.have && ipaState.have.version;
+  if(!have) return [];
+  return CHANGELOG.filter(function(e){ return e.ipa && vnum(e.v) > vnum(have); });
+}
+function ipaRender(){
+  var st = $('ipaStatus'), s = ipaState;
+  $('ipaGet').disabled = !IPA_OK || ipaWorking;
+  $('ipaOpen').disabled = !IPA_OK || ipaWorking || !(s && s.haveExists);
+  if(!IPA_OK){ hint('ipaStatus', 'Needs the newest Lunar Music.exe on this PC.', 'bad'); return; }
+  if(!s){ st.textContent = 'Checking\u2026'; st.className = 'hint'; return; }
+  var latest = s.latest, have = s.have || {}, text, cls = '';
+  if(!s.targetOK){ text = 'Your songs folder was not found, so there is nowhere to save the iPhone app. Check the songs folder above.'; cls = 'bad'; }
+  else if(!have.updated) text = 'Not downloaded yet.' + (latest ? ' The newest iPhone app was built ' + when(latest.updated) + '.' : '') + ' It will be saved as ' + s.target + '.';
+  else if(latest && latest.updated !== have.updated){
+    var need = ipaNeeds();
+    text = 'A newer iPhone app was built ' + when(latest.updated) + '. Yours is from ' + when(have.updated) + '.' +
+      (need.length ? ' Your iPhone needs it for: ' + need.map(function(e){ return e.notes[0]; }).join('; ') + '.' : ' Most updates reach your iPhone by themselves, so you only need it when the update log says so.');
+    if(need.length) cls = 'bad';
+  }
+  else text = 'You have the newest iPhone app (built ' + when(have.updated) + ') in ' + have.path + '.' + (latest ? '' : ' (Could not check GitHub just now.)');
+  if(s.haveExists === false && have.updated) text += ' The file is no longer there, so download it again.';
+  st.textContent = text; st.className = 'hint' + (cls ? ' ' + cls : '');
+}
+function ipaRefresh(fresh, quiet){
+  if(NATIVE) return;
+  ipaRender();
+  if(!IPA_OK) return;
+  fetch('/api/ipa' + (fresh ? '?fresh=1' : '')).then(function(r){ return r.json(); }).then(function(s){
+    ipaState = s; ipaRender();
+    var need = ipaNeeds();
+    if(quiet && need.length && s.latest && s.have && s.latest.updated !== s.have.updated && !ipaTold){
+      ipaTold = true;
+      toast('Your iPhone needs the newest Lunar Music app for version ' + need[need.length - 1].v + '. Get it in Settings > iPhone app.');
+    }
+  }).catch(function(){});
+}
+function ipaPost(body){
+  return fetch('/api/ipa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function(r){ return r.json(); });
+}
+function ipaOpen(){
+  return ipaPost({ action: 'open' }).then(function(d){
+    if(!d.ok){ hint('ipaHint', d.error, 'bad'); return; }
+    hint('ipaHint', (d.sideloadly ? 'Sideloadly is opening, and LunarMusic.ipa is selected in the folder that just opened. '
+                                   : 'Could not find Sideloadly on this PC, so open it yourself. LunarMusic.ipa is selected in the folder that just opened. ') +
+      'Plug in your iPhone, drag LunarMusic.ipa into Sideloadly, keep automatic refresh on, and press Start. Your songs and settings stay.', 'ok');
+  });
+}
+$('ipaGet').addEventListener('click', function(){
+  ipaWorking = true; ipaRender(); hint('ipaHint', 'Downloading the newest iPhone app\u2026');
+  ipaPost({ action: 'download', version: PAGE_VERSION }).then(function(d){
+    ipaWorking = false;
+    if(!d.ok){ ipaRender(); hint('ipaHint', d.error, 'bad'); return; }
+    ipaState = d.status; ipaRender();
+    return ipaOpen();
+  }).catch(function(){ ipaWorking = false; ipaRender(); hint('ipaHint', 'Something went wrong talking to Lunar Music. Try again.', 'bad'); });
+});
+$('ipaOpen').addEventListener('click', function(){ ipaOpen().catch(function(){}); });
+
+function openSettings(){ ipaRefresh(true, false); showStats(); document.body.classList.add('settings-open'); }
 function closeSettings(){ document.body.classList.remove('settings-open'); }
 $('openSet').addEventListener('click', openSettings);
 $('closeSet').addEventListener('click', closeSettings);
