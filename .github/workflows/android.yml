@@ -1,0 +1,55 @@
+name: Build Lunar Music for Quest (APK)
+
+on:
+  push:
+    paths:
+      - 'android/**'
+      - 'LunarMusic/app.html'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      # The player page is shared with the PC and iPhone versions.
+      - name: Put the player page in the app
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp LunarMusic/app.html android/app/src/main/assets/app.html
+
+      - name: Build the APK
+        working-directory: android
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk LunarMusicQuest.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LunarMusicQuest
+          path: LunarMusicQuest.apk
+
+      # Published under its own name so it never replaces the iPhone app's release.
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete quest-latest --yes --cleanup-tag || true
+          gh release create quest-latest LunarMusicQuest.apk --target "$GITHUB_SHA" --latest=false \
+            --title "Lunar Music for Meta Quest (latest build)" \
+            --notes "Install on a Quest in developer mode with SideQuest or Meta Quest Developer Hub. Updates install over the old version and keep your settings."

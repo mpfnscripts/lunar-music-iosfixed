@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Each GitHub build gets a higher number, so a new APK always installs over the old one.
+def buildNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
+
+android {
+    namespace 'com.mpfn.lunarmusic'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.mpfn.lunarmusic'
+        minSdk 29
+        targetSdk 34
+        versionCode 100 + buildNumber
+        versionName "2.9." + buildNumber
+    }
+
+    // The same key signs every build, so updates install over the old app and keep your settings.
+    signingConfigs {
+        lunar {
+            storeFile file('lunar.keystore')
+            storePassword 'lunarmusic'
+            keyAlias 'lunar'
+            keyPassword 'lunarmusic'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.lunar
+        }
+        debug {
+            signingConfig signingConfigs.lunar
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
