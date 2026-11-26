@@ -40,3 +40,20 @@ the repository is public. Changes to the Swift files still need a new IPA.
 With a one-time Google setup, a PC running Lunar Music sends its songs, icons and lyrics to a
 private "Lunar Music" folder in your own Google Drive, and this app downloads them into
 SONGS, ICONS and LYRICS. Set it up under Settings > Sync with Google Drive.
+
+## Meta Quest (APK)
+
+The `android/` folder is Lunar Music for Meta Quest: the same player page in a window, with the
+headset playing the music itself (it keeps going when the window is closed).
+
+- **Get it:** Releases > *Lunar Music for Meta Quest (latest build)* > `LunarMusicQuest.apk`. It is
+  built by GitHub Actions on every change (`.github/workflows/android.yml`).
+- **Install:** the Quest must be in developer mode. Then install the APK from your PC with SideQuest
+  or Meta Quest Developer Hub. It appears under *Unknown Sources* in the App Library. Newer APKs
+  install over the old one and keep your settings.
+- **Music from Google Drive:** in Settings > Sync with Google Drive, press *Get setup from my PC*
+  (or paste the setup text), sign in, and leave *Play from Google Drive* chosen. The song list,
+  icons and lyrics come from the "Lunar Music" folder your PC fills, and each song streams from
+  Drive as it plays: nothing is stored on the headset. *Download to this headset* copies the music
+  instead, like the iPhone.
+- **Without Drive:** copy .mp3 files to `Android/data/com.mpfn.lunarmusic/files/SONGS` over USB.
